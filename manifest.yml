@@ -19,5 +19,5 @@ permissions:
   external:
     fetch:
       backend:
-        - har-sanitizer.pages.dev
+        - har.securely.abrega.com
         - api.media.atlassian.com

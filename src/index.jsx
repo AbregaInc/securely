@@ -52,7 +52,7 @@ async function processHarObject(harObject, issueIdOrKey, fileName, attachmentId)
     console.log(Object.keys(modifiedJson).length);
 
     try {
-        const response = await api.fetch(`https://har-sanitizer.pages.dev/scrub`, {
+        const response = await api.fetch(`https://har.securely.abrega.com/scrub`, {
             body: JSON.stringify(modifiedJson),
             method: "post",
             headers: { 'Content-Type': 'application/json' },
