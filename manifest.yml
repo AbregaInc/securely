@@ -1,0 +1,23 @@
+modules:
+  trigger:
+    - key: forgefilescanner-hello-world
+      function: main
+      events:
+        - avi:jira:created:issue
+        - avi:jira:created:attachment
+  function:
+    - key: main
+      handler: index.run
+app:
+  runtime:
+    name: nodejs18.x
+  id: ari:cloud:ecosystem::app/aa939881-ce14-411d-9b3b-24206bdb6d44
+permissions:
+  scopes:
+    - read:jira-work
+    - write:jira-work
+  external:
+    fetch:
+      backend:
+        - har-sanitizer.pages.dev
+        - api.media.atlassian.com
