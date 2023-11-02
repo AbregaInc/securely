@@ -8,6 +8,14 @@ modules:
   function:
     - key: main
       handler: index.run
+    - key: process-har-function
+      handler: processHar.handler
+  consumer:
+    - key: har-queue-consumer
+      queue: har-queue
+      resolver:
+        function: process-har-function
+        method: processEvent
 app:
   runtime:
     name: nodejs18.x
