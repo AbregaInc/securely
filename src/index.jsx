@@ -21,8 +21,62 @@ function extractIdFromAttachmentResponse(response) {
     }
 }
 
+function extractUUID(url) {
+    const regex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/;
+    const match = url.match(regex);
+    return match ? match[0] : null;
+}
 
-async function processComments(issueIdOrKey, oldAttachmentId, newAttachmentId) {
+async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId, newAttachmentId) {
+    try {
+        // Fetch the comment body
+        const commentResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const commentData = await commentResponse.json();
+        const commentBody = commentData.body;
+
+        // Replace the original attachment ID with the new one
+        commentBody.content.forEach(contentBlock => {
+            if (contentBlock.type === 'mediaGroup') {
+                contentBlock.content.forEach(media => {
+                    if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
+                        media.attrs.id = newAttachmentId;
+                    }
+                });
+            }
+        });
+
+        // Update the comment
+
+        // Currently this fails with:
+        // INFO    09:49:46.063  1e238f12-05f3-4703-be2c-2720d7c4f8fd  Update Response: 400 Bad Request
+        // INFO    09:49:46.063  1e238f12-05f3-4703-be2c-2720d7c4f8fd  { errorMessages: [ 'ATTACHMENT_VALIDATION_ERROR' ], errors: {} }
+        const updateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                body: commentBody,
+                // Include other fields you want to update or keep the same
+            })
+        });
+
+        console.log(`Update Response: ${updateResponse.status} ${updateResponse.statusText}`);
+        console.log(await updateResponse.json());
+
+    } catch (error) {
+        console.error('Error updating comment:', error);
+    }
+}
+
+
+async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttachmentId) {
     try {
         // Fetch comments for the issue
         const issueCommentsResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment`, {
@@ -60,19 +114,23 @@ async function processComments(issueIdOrKey, oldAttachmentId, newAttachmentId) {
 
 
         const commentsWithAttachment = commentBodyResponseJson.values.filter(comment => {
-            // Check if the comment's body contains a mediaGroup with a media element having the oldAttachmentId
+            // Check if the comment's body contains a mediaGroup with a media element having the originalAttachmentMediaId
             return comment.body.content.some(contentBlock => 
                 contentBlock.type === 'mediaGroup' && 
                 contentBlock.content.some(media => 
                     media.type === 'media' && 
-                    media.attrs.id === oldAttachmentId
+                    media.attrs.id === originalAttachmentMediaId
                 )
             );
         });
 
-        console.log(oldAttachmentId);
+        console.log(originalAttachmentMediaId);
         console.log('comments with attachments')
-        console.log(commentsWithAttachment);
+        console.log(JSON.stringify(commentsWithAttachment));
+
+        commentsWithAttachment.forEach(comment => {
+            updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);
+        });
 
     } catch (error) {
         console.error('Error processing comments:', error);
@@ -118,8 +176,8 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         const responseJson = await response.json();
         const extractedId = extractIdFromAttachmentResponse(responseJson);
         console.log('New Attachment ID:')
-        console.log(extractedId);
-        console.log(responseJson);
+        console.log("Create Attachment extracted id", extractedId);
+        console.log("Create Attachment Response Json:", responseJson);
 
         return {
             status: response.status === 200,
@@ -131,10 +189,8 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
     }
 }
 
-async function processHarObject(harObject, issueIdOrKey, fileName, attachmentId) {
-    console.log(Object.keys(harObject).length);
+async function processHarObject(harObject, issueIdOrKey, fileName, attachmentId, originalAttachmentMediaId) {
     const modifiedJson = { har: harObject };
-    console.log(Object.keys(modifiedJson).length);
 
     try {
         console.log('scrubbing the file');
@@ -160,13 +216,16 @@ async function processHarObject(harObject, issueIdOrKey, fileName, attachmentId)
             // Delete the original attachments only if the new attachment was created successfully
             if (createAttachmentSuccessful.status) {
                 await deleteAttachment(attachmentId);
-                // Disabled pending https://community.developer.atlassian.com/t/how-to-work-with-attachments-in-comments-media-vs-attachments-nightmare/74338
-                //await processComments(issueIdOrKey, attachmentId, createAttachmentSuccessful.id);
+                
+                console.log('Create attachment new id:', createAttachmentSuccessful.id);
 
-                    // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
-                    // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
-                    // with comments. The problem is that the attachment happens in it's own event, so we would need to ensure we go through and 
-                    // look for description and other fields to update only once the attachment replacing is completed. 
+                await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
+
+                // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
+                // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
+                // with comments. The problem is that the attachment happens in it's own event, so we would need to ensure we go through and 
+                // look for description and other fields to update only once the attachment replacing is completed. 
+
             }
         } else {
             console.error('Error from server:', responseText);
@@ -192,10 +251,13 @@ export async function run(event, context) {
                 }
             });
             
-            console.log(`Response: ${response.status} ${response.statusText}`);
+            console.log(`Response: ${response.status} ${response.statusText} ${response.url}`);
+
+            const originalAttachmentMediaId = extractUUID(response.url);
+    
             const jsonResponse = await response.json();  // Parse the response once
 
-            await processHarObject(jsonResponse, event.attachment.issueId, event.attachment.fileName, event.attachment.id);  // Await the processing function
+            await processHarObject(jsonResponse, event.attachment.issueId, event.attachment.fileName, event.attachment.id, originalAttachmentMediaId);  // Await the processing function
         }
     }
 }
