@@ -2,10 +2,9 @@ import Resolver from "@forge/resolver";
 import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer';  // Import Buffer
+import {InvocationError, InvocationErrorCode} from "@forge/events";
 
 const resolver = new Resolver();
-
-
 
 function extractIdFromAttachmentResponse(response) {
     // Assuming the response is an array and you're interested in the first element
@@ -220,7 +219,7 @@ resolver.define("processEvent", async ({ payload, context }) => {
     try {
         console.log('scrubbing the file');
         // TODO - this probably also needs some kind of trigger callback in case scrubbing takes longer
-        // than the max function runtime
+        // than the max function runtime.
         const response = await api.fetch(`https://har.securely.abrega.com/scrub`, {
             body: JSON.stringify(modifiedJson),
             method: "post",
@@ -241,7 +240,8 @@ resolver.define("processEvent", async ({ payload, context }) => {
                 
                 console.log('Create attachment new id:', createAttachmentSuccessful.id);
 
-                await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
+                // TODO - fix this, failure documented above.
+                //await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
 
                 // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
                 // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
@@ -250,7 +250,20 @@ resolver.define("processEvent", async ({ payload, context }) => {
 
             }
         } else {
+            // This happens when something fails on the Cloudflare side of things
+            // Docs at https://developer.atlassian.com/platform/forge/runtime-reference/async-events-api/#retry-events
+
             console.error('Error from server:', responseText);
+            return new InvocationError({
+
+                // The App can request the retry to happen after a certain time period elapses
+          
+                retryAfter: 60, // seconds
+          
+                // The App should provide a reason as to why they are retrying.
+          
+                retryReason: InvocationErrorCode.FUNCTION_RETRY_REQUEST
+              });
         }
     } catch (error) {
         console.error('Error:', error);
