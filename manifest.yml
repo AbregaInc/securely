@@ -1,7 +1,7 @@
 modules:
   jira:adminPage:
     - key: admin-page
-      function: securely-main-admin-page
+      function: securely-admin-page
       title: Securely Admin
       useAsConfig: true
       useAsGetStarted: true
@@ -16,7 +16,7 @@ modules:
       handler: index.run
     - key: process-har-function
       handler: processHar.handler
-    - key: securely-main-admin-page
+    - key: securely-admin-page
       handler: admin.runAdminPage
   consumer:
     - key: har-queue-consumer
