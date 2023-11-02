@@ -1,10 +1,6 @@
 import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer';  // Import Buffer
-import { Queue } from '@forge/events';
-
-const queue = new Queue({ key: 'har-processor' });
-
 
 function extractIdFromAttachmentResponse(response) {
     // Assuming the response is an array and you're interested in the first element
