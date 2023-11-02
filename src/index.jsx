@@ -3,7 +3,7 @@ import FormData from "form-data";
 import { Buffer } from 'buffer';  // Import Buffer
 import { Queue } from '@forge/events';
 
-const queue = new Queue({ key: 'har-processor' });
+const queue = new Queue({ key: 'har-queue' });
 
 
 function extractIdFromAttachmentResponse(response) {
@@ -243,23 +243,6 @@ export async function run(event, context) {
         const fileName = event.attachment.fileName.toLowerCase();
         if (fileName.endsWith(".har") && !fileName.includes("-cleaned.har")) {
 
-
-
-            // Push a single event with string payload
-            const jobId = await queue.push('hello world');
-            // Get the JobProgress object
-            const jobProgress = queue.getJob(jobId);
-
-            // Get stats of a particular job
-            for (let i = 0; i < 5; i++) {
-                // Wait for 5 seconds
-                await new Promise(resolve => setTimeout(resolve, 5000));
-                const asyncResponse = await jobProgress.getStats();
-                console.log(await asyncResponse.json());
-            }
-
-/*
-
             const requestUrl = `/rest/api/3/attachment/content/${event.attachment.id}`;
             console.log(requestUrl);
 
@@ -275,9 +258,25 @@ export async function run(event, context) {
     
             const jsonResponse = await response.json();  // Parse the response once
 
-            await processHarObject(jsonResponse, event.attachment.issueId, event.attachment.fileName, event.attachment.id, originalAttachmentMediaId);  // Await the processing function
+            const payload = {
+                issueIdOrKey: event.attachment.issueId,
+                fileName: event.attachment.fileName,
+                attachmentId: event.attachment.id,
+                originalAttachmentMediaId: originalAttachmentMediaId
+            };
+            
+            const jobId = await queue.push(payload);
 
-*/
+            // Get the JobProgress object
+            const jobProgress = queue.getJob(jobId);
+
+            // Get stats of a particular job
+            for (let i = 0; i < 5; i++) {
+                // Wait for 5 seconds
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                const asyncResponse = await jobProgress.getStats();
+                console.log(await asyncResponse.json());
+            }
         }
     }
 }

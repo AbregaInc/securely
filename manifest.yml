@@ -8,16 +8,14 @@ modules:
   function:
     - key: main
       handler: index.run
-    - key: consumer-function
-      handler: consumer.handler
+    - key: process-har-function
+      handler: processHar.handler
   consumer:
-    - key: queue-consumer
-      # Name of the queue for which this consumer will be invoked
-      queue: har-processor
+    - key: har-queue-consumer
+      queue: har-queue
       resolver:
-        function: consumer-function
-        # resolver function to be called with payload
-        method: event-listener
+        function: process-har-function
+        method: processEvent
 app:
   runtime:
     name: nodejs18.x
