@@ -1,8 +1,10 @@
 modules:
   jira:adminPage:
     - key: admin-page
-      function: securely-admin-page
-      title: Securely Admin
+      resource: admin-main
+      resolver:
+        function: config
+      title: custom_ui_sample
       useAsConfig: true
       useAsGetStarted: true
   trigger:
@@ -16,14 +18,17 @@ modules:
       handler: index.run
     - key: process-har-function
       handler: processHar.handler
-    - key: securely-admin-page
-      handler: admin.runAdminPage
+    - key: config
+      handler: config.handler
   consumer:
     - key: har-queue-consumer
       queue: har-queue
       resolver:
         function: process-har-function
         method: processEvent
+resources:
+  - key: admin-main
+    path: static/hello-world/build
 app:
   runtime:
     name: nodejs18.x
@@ -32,8 +37,9 @@ permissions:
   scopes:
     - read:jira-work
     - write:jira-work
+    - storage:app
   external:
     fetch:
       backend:
         - har.securely.abrega.com
-        - api.media.atlassian.com
+        - api.media.atlassian.com  
