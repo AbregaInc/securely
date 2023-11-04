@@ -3,6 +3,8 @@ import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer';  // Import Buffer
 import {InvocationError, InvocationErrorCode} from "@forge/events";
+import { storage } from '@forge/api';
+
 
 const resolver = new Resolver();
 
@@ -197,76 +199,105 @@ resolver.define("processEvent", async ({ payload, context }) => {
     console.log('processHar.js');
     console.log(issueIdOrKey, fileName, attachmentId)
 
-
-    const requestUrl = `/rest/api/3/attachment/content/${attachmentId}`;
-    console.log(requestUrl);
-
-    const response = await api.asApp().requestJira(route`${requestUrl}`, {
-        headers: {
-            'Accept': 'application/json'
-        }
-    });
-    
-    console.log(`Response: ${response.status} ${response.statusText} ${response.url}`);
-
-    const originalAttachmentMediaId = extractUUID(response.url);
-
-    const harObject = await response.json();  // Parse the response once
-
-
-    const modifiedJson = { har: harObject };
-
     try {
-        console.log('scrubbing the file');
-        // TODO - this probably also needs some kind of trigger callback in case scrubbing takes longer
-        // than the max function runtime.
-        const response = await api.fetch(`https://har.securely.abrega.com/scrub`, {
-            body: JSON.stringify(modifiedJson),
-            method: "post",
-            headers: { 'Content-Type': 'application/json' },
+        const requestUrl = `/rest/api/3/attachment/content/${attachmentId}`;
+        console.log(requestUrl);
+
+        const attachmentResponse = await api.asApp().requestJira(route`${requestUrl}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
         });
         
-        const responseText = await response.text();
-        console.log('Har Cleaner Response Status:', response.status);
+        console.log(`Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);
 
-        if (response.ok) {  // Checks if status code is 200-299
-            const sanitizedContent = JSON.parse(responseText);  // Parse the response text
-            console.log('scrubbed the file');
-            // Create a new attachment with the sanitized content
-            const createAttachmentSuccessful = await createAttachment(issueIdOrKey, sanitizedContent, fileName);
-            // Delete the original attachments only if the new attachment was created successfully
-            if (createAttachmentSuccessful.status) {
-                await deleteAttachment(attachmentId);
-                
-                console.log('Create attachment new id:', createAttachmentSuccessful.id);
+        if (!attachmentResponse.ok){
+            throw "Attachment not found in Jira";
+        }
 
-                // TODO - fix this, failure documented above.
-                //await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
+        const originalAttachmentMediaId = extractUUID(attachmentResponse.url);
 
-                // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
-                // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
-                // with comments. The problem is that the attachment happens in it's own event, so we would need to ensure we go through and 
-                // look for description and other fields to update only once the attachment replacing is completed. 
+        const harObject = await attachmentResponse.json();  // Parse the response once
 
+
+        // Fetch the settings from Forge storage
+        const keys = ['all_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
+        const settings = {};
+
+        for (const key of keys) {
+            const storedValue = await storage.get(key);
+            settings[key] = storedValue?.toggle ?? false;
+        }
+
+        // Construct the options object
+        const options = {
+            har: harObject,  // The HAR data
+            // You can include other options like 'words' here if needed
+            ...settings  // Spread the settings into the options object
+        };
+
+        //console.log('Scrub options: ', JSON.stringify(options));
+
+
+
+        try {
+            // TODO - this probably also needs some kind of trigger callback in case scrubbing takes longer
+            // than the max function runtime.
+            console.log('scrubbing the file');
+            const response = await api.fetch(`https://har.securely.abrega.com/scrub`, {
+                body: JSON.stringify(options),
+                method: "post",
+                headers: { 'Content-Type': 'application/json' },
+            });
+            
+            const responseText = await response.text();
+            console.log('Har Cleaner Response Status:', response.status);
+
+            if (response.ok) {  // Checks if status code is 200-299
+                const sanitizedContent = JSON.parse(responseText);  // Parse the response text
+                console.log('scrubbed the file');
+                // Create a new attachment with the sanitized content
+                const createAttachmentSuccessful = await createAttachment(issueIdOrKey, sanitizedContent, fileName);
+                // Delete the original attachments only if the new attachment was created successfully
+                if (createAttachmentSuccessful.status) {
+                    await deleteAttachment(attachmentId);
+                    
+                    console.log('Create attachment new id:', createAttachmentSuccessful.id);
+
+                    // TODO - fix this, failure documented above.
+                    //await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
+
+                    // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
+                    // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
+                    // with comments. The problem is that the attachment happens in it's own event, so we would need to ensure we go through and 
+                    // look for description and other fields to update only once the attachment replacing is completed. 
+
+                }
+            } else {
+                // This happens when something fails on the Cloudflare side of things
+                // Docs at https://developer.atlassian.com/platform/forge/runtime-reference/async-events-api/#retry-events
+
+                console.error('Error from server:', responseText);
+                // TODO - Maybe this caused some inifinite looping stuff?
+
+                /*
+                return new InvocationError({
+
+                    // The App can request the retry to happen after a certain time period elapses
+            
+                    retryAfter: 60, // seconds
+            
+                    // The App should provide a reason as to why they are retrying.
+            
+                    retryReason: InvocationErrorCode.FUNCTION_RETRY_REQUEST
+                });
+                */
             }
-        } else {
-            // This happens when something fails on the Cloudflare side of things
-            // Docs at https://developer.atlassian.com/platform/forge/runtime-reference/async-events-api/#retry-events
-
-            console.error('Error from server:', responseText);
-            return new InvocationError({
-
-                // The App can request the retry to happen after a certain time period elapses
-          
-                retryAfter: 60, // seconds
-          
-                // The App should provide a reason as to why they are retrying.
-          
-                retryReason: InvocationErrorCode.FUNCTION_RETRY_REQUEST
-              });
+        } catch (error) {
+            console.error('Error:', error);
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Getting Attachment Error:', error);
     }
 
 });
