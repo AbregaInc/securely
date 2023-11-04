@@ -4,7 +4,7 @@ modules:
       resource: admin-main
       resolver:
         function: config
-      title: custom_ui_sample
+      title: Securely Config
       useAsConfig: true
       useAsGetStarted: true
   trigger:
@@ -28,7 +28,7 @@ modules:
         method: processEvent
 resources:
   - key: admin-main
-    path: static/hello-world/build
+    path: static/admin-page/build
 app:
   runtime:
     name: nodejs18.x
