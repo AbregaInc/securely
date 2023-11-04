@@ -43,3 +43,6 @@ permissions:
       backend:
         - har.securely.abrega.com
         - api.media.atlassian.com  
+  content:
+    styles:
+      - 'unsafe-inline'

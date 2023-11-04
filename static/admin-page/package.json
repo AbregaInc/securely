@@ -4,7 +4,10 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
-    "@atlaskit/css-reset": "^6.6.0",
+    "@atlaskit/css-reset": "^6.6.1",
+    "@atlaskit/field-base": "^15.2.4",
+    "@atlaskit/form": "^8.11.13",
+    "@atlaskit/page": "^12.3.6",
     "@atlaskit/toggle": "^12.6.11",
     "@forge/bridge": "3.0.0",
     "react": "^16.13.1",

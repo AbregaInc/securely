@@ -3,19 +3,22 @@ import { storage } from '@forge/api';
 
 const resolver = new Resolver();
 
-resolver.define('getText', (req) => {
-    console.log(req);
-    return 'Hello, world!';
+resolver.define('setSettings', async (req) => {
+    const { key, value } = req.payload;
+    await storage.set(key, { toggle: value });
+    return `Setting ${key} set to ${value}`;
 });
 
-resolver.define('getToggleValue', async () => {
-    return await storage.get('toggle-value');
-});
+resolver.define('getSettings', async () => {
+    const keys = ['all_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
+    const settings = {};
+    
+    for (const key of keys) {
+        const storedValue = await storage.get(key);
+        settings[key] = storedValue?.toggle ?? false;
+    }
 
-resolver.define('setToggleValue', async (req) => {
-    const { value } = req;
-    await storage.set('toggle-value', value);
-    return `Toggle value set to ${value}`;
+    return settings;
 });
 
 export const handler = resolver.getDefinitions();
