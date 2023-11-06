@@ -243,6 +243,10 @@ resolver.define("processEvent", async ({ payload, context }) => {
         try {
             // TODO - this probably also needs some kind of trigger callback in case scrubbing takes longer
             // than the max function runtime.
+
+
+            // TODO P1 - We're getting booted on limits (https://developers.cloudflare.com/workers/platform/limits/) sometimes 
+            // So this at least needs to be documented and then we need to ideally gracefully fail.
             console.log('scrubbing the file');
             const response = await api.fetch(`https://har.securely.abrega.com/scrub`, {
                 body: JSON.stringify(options),
@@ -278,7 +282,7 @@ resolver.define("processEvent", async ({ payload, context }) => {
                 // Docs at https://developer.atlassian.com/platform/forge/runtime-reference/async-events-api/#retry-events
 
                 console.error('Error from server:', responseText);
-                // TODO - Maybe this caused some inifinite looping stuff?
+                // TODO P1 - Maybe this caused some inifinite looping stuff?
 
                 /*
                 return new InvocationError({
