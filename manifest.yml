@@ -5,6 +5,12 @@ modules:
       resolver:
         function: config
       title: Securely Config
+      icon: resource:admin-main;icon.svg
+    - key: admin-page-config-get-started
+      resource: admin-main
+      resolver:
+        function: config
+      title: Securely Config
       useAsConfig: true
       useAsGetStarted: true
   trigger:
