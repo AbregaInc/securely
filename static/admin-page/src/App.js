@@ -80,7 +80,7 @@ function App() {
             <Grid>
                 <GridColumn medium={8}>
                     <Heading level="h600">HAR File Scrubbing Configuration</Heading>
-                    <p>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
+                    <p style={{marginBottom: '40px'}}>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
                     If you would like to scrub all of a given data element, then please enable that below.</p>
 
                     <ToggleWithLabel
