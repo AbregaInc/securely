@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { invoke } from '@forge/bridge';
+import { invoke, view } from '@forge/bridge';
 import Toggle from '@atlaskit/toggle';
-import { Label } from '@atlaskit/field-base';
 import Page, { Grid, GridColumn } from '@atlaskit/page';
 import '@atlaskit/css-reset';
 import Heading from '@atlaskit/heading';
+import { token } from '@atlaskit/tokens';
+
+await view.theme.enable();
 
 function CustomLabel({ htmlFor, children, style }) {
     return (
@@ -17,32 +19,25 @@ function CustomLabel({ htmlFor, children, style }) {
 function ToggleWithLabel({ label, checked, onChange, id, description }) {
     const labelStyle = {
         flexGrow: 1,
-        marginRight: '8px',
-    };
-
-    const toggleWrapperStyle = {
+        marginRight: token('space.100', '8px'), 
+      };
+      
+      const toggleWrapperStyle = {
         display: 'flex',
         flexDirection: 'column',
-        marginBottom: '20px',
-    };
-
-    const toggleRowStyle = {
+        marginBottom: token('space.250', '20px'),
+      };
+      
+      const toggleRowStyle = {
         display: 'flex',
         alignItems: 'center',
-        marginBottom: '8px',
-    };
-
-    const descriptionStyle = {
-        fontSize: '0.85rem',
-        color: '#6B778C',
-    };
-
-    const toggleContainerStyle = {
-        height: '44px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-    };
+        marginBottom: token('space.100', '8px'),
+      };
+      
+      const descriptionStyle = {
+        fontSize: token('space.200', '16px'),
+        color: token('color.text.accent.gray', '#6B778C'),
+      };
 
     return (
         <div style={toggleWrapperStyle}>
@@ -80,7 +75,7 @@ function App() {
             <Grid>
                 <GridColumn medium={8}>
                     <Heading level="h600">HAR File Scrubbing Configuration</Heading>
-                    <p style={{marginBottom: '40px'}}>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
+                    <p style={{marginBottom: token('space.500', '40px')}}>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
                     If you would like to scrub all of a given data element, then please enable that below.</p>
 
                     <ToggleWithLabel

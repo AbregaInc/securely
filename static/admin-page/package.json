@@ -11,6 +11,7 @@
     "@atlaskit/page": "^12.3.6",
     "@atlaskit/theme": "^12.6.2",
     "@atlaskit/toggle": "^12.6.11",
+    "@atlaskit/tokens": "^1.28.1",
     "@forge/bridge": "3.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
