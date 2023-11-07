@@ -6,6 +6,14 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import '@atlaskit/css-reset';
 import Heading from '@atlaskit/heading';
 
+function CustomLabel({ htmlFor, children, style }) {
+    return (
+      <label htmlFor={htmlFor} style={style}>
+        {children}
+      </label>
+    );
+  }
+
 function ToggleWithLabel({ label, checked, onChange, id, description }) {
     const labelStyle = {
         flexGrow: 1,
@@ -29,10 +37,17 @@ function ToggleWithLabel({ label, checked, onChange, id, description }) {
         color: '#6B778C',
     };
 
+    const toggleContainerStyle = {
+        height: '44px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+    };
+
     return (
         <div style={toggleWrapperStyle}>
             <div style={toggleRowStyle}>
-                <Label htmlFor={id} style={labelStyle}>{label}</Label>
+                <CustomLabel htmlFor={id} style={labelStyle}>{label}</CustomLabel>
                 <Toggle id={id} isChecked={checked} onChange={onChange} />
             </div>
             <p style={descriptionStyle}>{description}</p>
