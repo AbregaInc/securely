@@ -6,6 +6,39 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import '@atlaskit/css-reset';
 import Heading from '@atlaskit/heading';
 
+function ToggleWithLabel({ label, checked, onChange, id, description }) {
+    const labelStyle = {
+        flexGrow: 1,
+        marginRight: '8px',
+    };
+
+    const toggleWrapperStyle = {
+        display: 'flex',
+        flexDirection: 'column',
+        marginBottom: '20px',
+    };
+
+    const toggleRowStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        marginBottom: '8px',
+    };
+
+    const descriptionStyle = {
+        fontSize: '0.85rem',
+        color: '#6B778C',
+    };
+
+    return (
+        <div style={toggleWrapperStyle}>
+            <div style={toggleRowStyle}>
+                <Label htmlFor={id} style={labelStyle}>{label}</Label>
+                <Toggle id={id} isChecked={checked} onChange={onChange} />
+            </div>
+            <p style={descriptionStyle}>{description}</p>
+        </div>
+    );
+}
 
 function App() {
     const [settings, setSettings] = useState({
@@ -35,35 +68,45 @@ function App() {
                     <p>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
                     If you would like to scrub all of a given data element, then please enable that below.</p>
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <Label htmlFor="all_headers">Remove all headers</Label>
-                        <Toggle isChecked={settings.all_headers} onChange={(e) => handleChange('all_headers', e)} />
-                        <p>HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information.</p>
-                    </div>
+                    <ToggleWithLabel
+                        label="Remove all headers"
+                        checked={settings.all_headers}
+                        onChange={(e) => handleChange('all_headers', e)}
+                        id="all_headers"
+                        description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
+                    />
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <Label htmlFor="all_cookies">Remove all cookies</Label>
-                        <Toggle isChecked={settings.all_cookies} onChange={(e) => handleChange('all_cookies', e)} />
-                        <p>Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences.</p>
-                    </div>
+                    <ToggleWithLabel
+                        label="Remove all cookies"
+                        checked={settings.all_cookies}
+                        onChange={(e) => handleChange('all_cookies', e)}
+                        id="all_cookies"
+                        description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
+                    />
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <Label htmlFor="all_mimetypes">Remove all MIME types</Label>
-                        <Toggle isChecked={settings.all_mimetypes} onChange={(e) => handleChange('all_mimetypes', e)} />
-                        <p>MIME types are identifiers used to specify the nature and format of a document, file, or assortment of bytes. They are important in HTTP to indicate the type of content being transmitted, such as text/html for HTML pages, application/json for JSON data, or image/png for PNG images.</p>
-                    </div>
+                    <ToggleWithLabel
+                        label="Remove all MIME types"
+                        checked={settings.all_mimetypes}
+                        onChange={(e) => handleChange('all_mimetypes', e)}
+                        id="all_mimetypes"
+                        description="MIME types are identifiers used to specify the nature and format of a document, file, or assortment of bytes. They are important in HTTP to indicate the type of content being transmitted, such as text/html for HTML pages, application/json for JSON data, or image/png for PNG images."
+                    />
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <Label htmlFor="all_queryargs">Remove all query arguments</Label>
-                        <Toggle isChecked={settings.all_queryargs} onChange={(e) => handleChange('all_queryargs', e)} />
-                        <p>Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc.</p>
-                    </div>
+                    <ToggleWithLabel
+                        label="Remove all query arguments"
+                        checked={settings.all_queryargs}
+                        onChange={(e) => handleChange('all_queryargs', e)}
+                        id="all_queryargs"
+                        description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
+                    />
 
-                    <div style={{ marginBottom: '20px' }}>
-                        <Label htmlFor="all_postparams">Remove all POST parameters</Label>
-                        <Toggle isChecked={settings.all_postparams} onChange={(e) => handleChange('all_postparams', e)} />
-                        <p>POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs.</p>
-                    </div>
+                    <ToggleWithLabel
+                        label="Remove all POST parameters"
+                        checked={settings.all_postparams}
+                        onChange={(e) => handleChange('all_postparams', e)}
+                        id="all_postparams"
+                        description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
+                    />
                 </GridColumn>
             </Grid>
         </Page>
