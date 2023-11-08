@@ -14,11 +14,13 @@ modules:
       useAsConfig: true
       useAsGetStarted: true
   trigger:
-    - key: forgefilescanner-hello-world
+    - key: entrypoint
       function: main
       events:
         - avi:jira:created:issue
         - avi:jira:created:attachment
+      filter:
+        ignoreSelf: true
   function:
     - key: main
       handler: index.run
@@ -39,6 +41,8 @@ app:
   runtime:
     name: nodejs18.x
   id: ari:cloud:ecosystem::app/aa939881-ce14-411d-9b3b-24206bdb6d44
+  licensing:
+    enabled: true
 permissions:
   scopes:
     - read:jira-work

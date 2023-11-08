@@ -2,7 +2,7 @@ import Resolver from "@forge/resolver";
 import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer';  // Import Buffer
-import {InvocationError, InvocationErrorCode} from "@forge/events";
+//import {InvocationError, InvocationErrorCode} from "@forge/events";
 import { storage } from '@forge/api';
 
 
@@ -179,7 +179,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         const extractedId = extractIdFromAttachmentResponse(responseJson);
         console.log('New Attachment ID:')
         console.log("Create Attachment extracted id", extractedId);
-        console.log("Create Attachment Response Json:", responseJson);
+        //console.log("Create Attachment Response Json:", responseJson);
 
         return {
             status: response.status === 200,
@@ -193,6 +193,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
 
 resolver.define("processEvent", async ({ payload, context }) => {
     console.log('Consumer function invoked');
+    console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
     // ... rest of the code
@@ -212,7 +213,10 @@ resolver.define("processEvent", async ({ payload, context }) => {
         console.log(`Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);
 
         if (!attachmentResponse.ok){
-            throw "Attachment not found in Jira";
+            console.log("Attachment not found in Jira");
+            return Promise.resolve({
+                statusCode: 200 
+            });
         }
 
         const originalAttachmentMediaId = extractUUID(attachmentResponse.url);
@@ -275,6 +279,15 @@ resolver.define("processEvent", async ({ payload, context }) => {
                     // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
                     // with comments. The problem is that the attachment happens in it's own event, so we would need to ensure we go through and 
                     // look for description and other fields to update only once the attachment replacing is completed. 
+                    
+                    // TODO P1 - this logic isn't right. We need to persist the dedupe long enough so that when Atlassian sends dupe events, we can reject them for a while. 
+                    // Deleting the dedpue id here doesn't help. Instead we should probably be storing a timestamp, then searching for all keys with a timestamp 
+                    // that is at least some amount of time in the past and then cleaning those up
+                    const dedupeId = issueIdOrKey + fileName + attachmentId;
+                    await storage.delete(dedupeId);
+                    return Promise.resolve({
+                        statusCode: 200 
+                    });
 
                 }
             } else {
