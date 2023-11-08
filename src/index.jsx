@@ -8,7 +8,7 @@ export async function run(event, context) {
     console.log(JSON.stringify(event));
 
     if (event.eventType === 'avi:jira:created:attachment'){ 
-        if (event.attachment.size > 103809024){
+        if (event.attachment.size < 103809024){
             const fileName = event.attachment.fileName.toLowerCase();
             if (fileName.endsWith(".har") && !fileName.includes("-cleaned.har")) {
     
