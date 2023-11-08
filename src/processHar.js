@@ -295,9 +295,7 @@ resolver.define("processEvent", async ({ payload, context }) => {
                 // Docs at https://developer.atlassian.com/platform/forge/runtime-reference/async-events-api/#retry-events
 
                 console.error('Error from server:', responseText);
-                // TODO P1 - Maybe this caused some inifinite looping stuff?
 
-                /*
                 return new InvocationError({
 
                     // The App can request the retry to happen after a certain time period elapses
@@ -308,7 +306,7 @@ resolver.define("processEvent", async ({ payload, context }) => {
             
                     retryReason: InvocationErrorCode.FUNCTION_RETRY_REQUEST
                 });
-                */
+
             }
         } catch (error) {
             console.error('Error:', error);
