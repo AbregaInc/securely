@@ -41,6 +41,9 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         const commentData = await commentResponse.json();
         const commentBody = commentData.body;
 
+        console.log("Original Comment Body:");
+        console.log(JSON.stringify(commentBody));
+
         // Replace the original attachment ID with the new one
         commentBody.content.forEach(contentBlock => {
             if (contentBlock.type === 'mediaGroup') {
@@ -51,6 +54,10 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
                 });
             }
         });
+
+
+        console.log("Updated Comment Body:");
+        console.log(JSON.stringify(commentBody));
 
         // Update the comment
 
@@ -64,8 +71,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                body: commentBody,
-                // Include other fields you want to update or keep the same
+                body: commentBody
             })
         });
 
@@ -109,8 +115,8 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
 
         const commentBodyResponseJson = await commentBodyResponse.json();
 
-        console.log('comment body');
-        console.log(JSON.stringify(commentBodyResponseJson));        
+        //console.log('All comments on the issue (within a given page)');
+        //console.log(JSON.stringify(commentBodyResponseJson));        
         //console.log(`Response: ${commentBodyResponse.status} ${commentBodyResponse.statusText}`);
         //console.log(await commentBodyResponse.text());
 
@@ -270,10 +276,13 @@ resolver.define("processEvent", async ({ payload, context }) => {
                 if (createAttachmentSuccessful.status) {
                     await deleteAttachment(attachmentId);
                     
-                    console.log('Create attachment new id:', createAttachmentSuccessful.id);
+                    const mediaURL = (await fetch(`https://ecosystem.atlassian.net/rest/api/3/attachment/content/${createAttachmentSuccessful.id}`)).url
+                    console.log("New Media URL: ",mediaURL);
+                    const newMediaId = extractUUID(mediaURL);
+                    console.log('Create attachment new id:', newMediaId);
 
                     // TODO - fix this, failure documented above.
-                    //await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
+                    await processComments(issueIdOrKey, originalAttachmentMediaId, newMediaId);
 
                     // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
                     // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
@@ -306,7 +315,6 @@ resolver.define("processEvent", async ({ payload, context }) => {
             
                     retryReason: InvocationErrorCode.FUNCTION_RETRY_REQUEST
                 });
-
             }
         } catch (error) {
             console.error('Error:', error);
