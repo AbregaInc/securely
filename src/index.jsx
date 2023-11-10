@@ -1,7 +1,12 @@
 import { Queue } from '@forge/events';
 import { storage } from '@forge/api';
+const { createHash } = require('crypto');
 
 const queue = new Queue({ key: 'har-queue' });
+
+function hash(string) {
+    return createHash('sha256').update(string).digest('hex');
+  }
 
 export async function run(event, context) {
     console.log('starting run');
@@ -13,9 +18,10 @@ export async function run(event, context) {
             if (fileName.endsWith(".har") && !fileName.includes("-cleaned.har")) {
     
                 const dedupeId = event.attachment.issueId + event.attachment.fileName + event.attachment.id;
-                console.log(dedupeId);
+                console.log(hash(dedupeId));
     
-                const hasProcessed = await storage.get(dedupeId);
+                const hasProcessed = await storage.get(hash(dedupeId));
+                console.log("got dedupeid", hasProcessed)
                 if (hasProcessed) {
                     console.log(`Duplicate found for ${dedupeId}, skipping processing.`);
                     return; // Stop processing if duplicate is found
@@ -27,7 +33,7 @@ export async function run(event, context) {
                     attachmentId: event.attachment.id,
                 };
     
-                
+                console.log(payload);
                 const jobId = await queue.push(payload);
     
                 return Promise.resolve({

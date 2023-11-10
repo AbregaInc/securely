@@ -4,24 +4,14 @@ import FormData from "form-data";
 import { Buffer } from 'buffer';  // Import Buffer
 //import {InvocationError, InvocationErrorCode} from "@forge/events";
 import { storage } from '@forge/api';
+const { createHash } = require('crypto');
 
 
 const resolver = new Resolver();
 
-function extractIdFromAttachmentResponse(response) {
-    // Assuming the response is an array and you're interested in the first element
-    const selfUrl = response[0].self;
-
-    // Use a regular expression to extract the desired ID
-    const match = selfUrl.match(/ex\/jira\/([a-f0-9-]+)\//);
-
-    if (match) {
-        return match[1]; // This is the extracted ID
-    } else {
-        console.error("ID not found in URL:", selfUrl);
-        return null;
-    }
-}
+function hash(string) {
+    return createHash('sha256').update(string).digest('hex');
+  }
 
 function extractUUID(url) {
     const regex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/;
@@ -76,7 +66,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         });
 
         console.log(`Update Response: ${updateResponse.status} ${updateResponse.statusText}`);
-        console.log(await updateResponse.json());
+        //console.log(await updateResponse.json());
 
     } catch (error) {
         console.error('Error updating comment:', error);
@@ -132,9 +122,9 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
             );
         });
 
-        console.log(originalAttachmentMediaId);
-        console.log('comments with attachments')
-        console.log(JSON.stringify(commentsWithAttachment));
+        //console.log(originalAttachmentMediaId);
+        //console.log('comments with attachments')
+        //console.log(JSON.stringify(commentsWithAttachment));
 
         commentsWithAttachment.forEach(comment => {
             updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);
@@ -182,14 +172,24 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         console.log(`Response: ${response.status} ${response.statusText}`);
 
         const responseJson = await response.json();
-        const extractedId = extractIdFromAttachmentResponse(responseJson);
-        console.log('New Attachment ID:')
-        console.log("Create Attachment extracted id", extractedId);
-        //console.log("Create Attachment Response Json:", responseJson);
+        //console.log(JSON.stringify(responseJson[0].id));
+
+        const requestUrl = `/rest/api/3/attachment/content/${responseJson[0].id}`;
+
+        const attachmentResponse = await api.asApp().requestJira(route`${requestUrl}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        console.log(`New Attachment Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);   
+
+        const mediaURL = await attachmentResponse.url;
+        const newMediaId = extractUUID(mediaURL);
 
         return {
             status: response.status === 200,
-            id: extractedId
+            id: newMediaId
         };
         
     } catch (error) {
@@ -202,7 +202,6 @@ resolver.define("processEvent", async ({ payload, context }) => {
     console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
-    // ... rest of the code
     console.log('processHar.js');
     console.log(issueIdOrKey, fileName, attachmentId)
 
@@ -275,14 +274,19 @@ resolver.define("processEvent", async ({ payload, context }) => {
                 // Delete the original attachments only if the new attachment was created successfully
                 if (createAttachmentSuccessful.status) {
                     await deleteAttachment(attachmentId);
-                    
-                    const mediaURL = (await fetch(`https://ecosystem.atlassian.net/rest/api/3/attachment/content/${createAttachmentSuccessful.id}`)).url
+                    /*
+                    console.log(JSON.stringify(createAttachmentSuccessful.id));
+                    // TODO - This is still returning an ecosystem URL and not a media URL.
+                    const mediaURL = (await fetch(`https://ecosystem.atlassian.net/rest/api/3/attachment/content/${createAttachmentSuccessful.id}`, {
+                        redirect: 'follow',
+                        follow: 10,
+                    })).url
                     console.log("New Media URL: ",mediaURL);
                     const newMediaId = extractUUID(mediaURL);
                     console.log('Create attachment new id:', newMediaId);
-
+*/
                     // TODO - fix this, failure documented above.
-                    await processComments(issueIdOrKey, originalAttachmentMediaId, newMediaId);
+                    await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
 
                     // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
                     // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
@@ -293,7 +297,7 @@ resolver.define("processEvent", async ({ payload, context }) => {
                     // Deleting the dedpue id here doesn't help. Instead we should probably be storing a timestamp, then searching for all keys with a timestamp 
                     // that is at least some amount of time in the past and then cleaning those up
                     const dedupeId = issueIdOrKey + fileName + attachmentId;
-                    await storage.delete(dedupeId);
+                    await storage.delete(hash(dedupeId));
                     return Promise.resolve({
                         statusCode: 200 
                     });
