@@ -28,6 +28,8 @@ modules:
       handler: processHar.handler
     - key: config
       handler: config.handler
+    - key: scrub
+      handler: scrub.handler
   consumer:
     - key: har-queue-consumer
       queue: har-queue
