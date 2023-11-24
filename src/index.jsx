@@ -18,7 +18,7 @@ export async function run(event, context) {
             if (fileName.endsWith(".har") && !fileName.includes("-cleaned.har")) {
     
                 const dedupeId = event.attachment.issueId + event.attachment.fileName + event.attachment.id;
-                console.log(hash(dedupeId));
+                console.log('Dedupe ID: ', hash(dedupeId));
     
                 const hasProcessed = await storage.get(hash(dedupeId));
                 console.log("got dedupeid", hasProcessed)
@@ -54,7 +54,7 @@ export async function run(event, context) {
                 */
             }
         } else {
-            console.log("Attachment was > 99MB in size: ", event.attachment.fileName)
+            console.error("Attachment was > 99MB in size: ", event.attachment.fileName)
         }
     }
 }
