@@ -9,11 +9,7 @@ const { createHash } = require('crypto');
 
 const resolver = new Resolver();
 
-console.log(1);
-
 const queue = new Queue({ key: 'comment-queue' });
-
-console.log(2);
 
 function hash(string) {
     return createHash('sha256').update(string).digest('hex');
@@ -202,6 +198,4 @@ resolver.define("processHar", async ({ payload, context }) => {
 
 });
 
-console.log(3);
 export const handler = resolver.getDefinitions();
-console.log(4);

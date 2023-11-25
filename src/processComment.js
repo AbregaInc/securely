@@ -142,7 +142,10 @@ resolver.define("processComment", async ({ payload, context }) => {
 
     try {
                 await deleteAttachment(attachmentId);
-                await processComments(issueIdOrKey, originalAttachmentMediaId, createAttachmentSuccessful.id);
+                await processComments(issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId);
+                return Promise.resolve({
+                    statusCode: 200 
+                });
     } catch (error) {
         console.error('Error:', error);
     }
