@@ -1,21 +1,7 @@
 import Resolver from "@forge/resolver";
 import api, { route } from "@forge/api";
-import FormData from "form-data";
-import { Buffer } from 'buffer'; 
-const { createHash } = require('crypto');
-
 
 const resolver = new Resolver();
-
-function hash(string) {
-    return createHash('sha256').update(string).digest('hex');
-  }
-
-function extractUUID(url) {
-    const regex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/;
-    const match = url.match(regex);
-    return match ? match[0] : null;
-}
 
 async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId, newAttachmentId) {
     try {
@@ -146,56 +132,7 @@ async function deleteAttachment(attachmentId) {
     }
 }
 
-async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
-    try {
-        var n = fileName.lastIndexOf(".");
-        var newFileName = fileName.substring(0, n) + "-cleaned" + fileName.substring(n);
-        
-        const form = new FormData();
-
-        // Convert sanitizedContent to a Buffer if it's a string or an object
-        const fileBuffer = Buffer.from(JSON.stringify(sanitizedContent));
-        form.append('file', fileBuffer, { filename: newFileName });
-        console.log('uploading file to jira');
-        const response = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/attachments`, {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'X-Atlassian-Token': 'no-check',  // This header is required for file uploads
-                ...form.getHeaders()
-            },
-            body: form
-        });
-
-        console.log(`Response: ${response.status} ${response.statusText}`);
-
-        const responseJson = await response.json();
-        //console.log(JSON.stringify(responseJson[0].id));
-
-        const requestUrl = `/rest/api/3/attachment/content/${responseJson[0].id}`;
-
-        const attachmentResponse = await api.asApp().requestJira(route`${requestUrl}`, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
-        console.log(`New Attachment Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);   
-
-        const mediaURL = await attachmentResponse.url;
-        const newMediaId = extractUUID(mediaURL);
-
-        return {
-            status: response.status === 200,
-            id: newMediaId
-        };
-        
-    } catch (error) {
-        console.error('Error creating attachment:', error);
-    }
-}
-
-resolver.define("processEvent", async ({ payload, context }) => {
+resolver.define("processComment", async ({ payload, context }) => {
     console.log('Consumer function invoked');
     console.log(JSON.stringify(context));
 

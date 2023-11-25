@@ -1,4 +1,5 @@
 import Resolver from "@forge/resolver";
+import { Queue } from '@forge/events';
 import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer'; 
@@ -8,7 +9,11 @@ const { createHash } = require('crypto');
 
 const resolver = new Resolver();
 
+console.log(1);
+
 const queue = new Queue({ key: 'comment-queue' });
+
+console.log(2);
 
 function hash(string) {
     return createHash('sha256').update(string).digest('hex');
@@ -18,135 +23,6 @@ function extractUUID(url) {
     const regex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/;
     const match = url.match(regex);
     return match ? match[0] : null;
-}
-
-async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId, newAttachmentId) {
-    try {
-        // Fetch the comment body
-        const commentResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        const commentData = await commentResponse.json();
-        const commentBody = commentData.body;
-
-        //console.log("Original Comment Body:");
-        //console.log(JSON.stringify(commentBody));
-
-        // Replace the original attachment ID with the new one
-        commentBody.content.forEach(contentBlock => {
-            if (contentBlock.type === 'mediaGroup') {
-                contentBlock.content.forEach(media => {
-                    if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
-                        media.attrs.id = newAttachmentId;
-                    }
-                });
-            }
-        });
-
-
-        //console.log("Updated Comment Body:");
-        //console.log(JSON.stringify(commentBody));
-
-        // Update the comment
-
-        // Currently this fails with:
-        // INFO    09:49:46.063  1e238f12-05f3-4703-be2c-2720d7c4f8fd  Update Response: 400 Bad Request
-        // INFO    09:49:46.063  1e238f12-05f3-4703-be2c-2720d7c4f8fd  { errorMessages: [ 'ATTACHMENT_VALIDATION_ERROR' ], errors: {} }
-        const updateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
-            method: 'PUT',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                body: commentBody
-            })
-        });
-
-        console.log(`Update Response: ${updateResponse.status} ${updateResponse.statusText}`);
-        //console.log(await updateResponse.json());
-
-    } catch (error) {
-        console.error('Error updating comment:', error);
-    }
-}
-
-
-async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttachmentId) {
-    try {
-        // Fetch comments for the issue
-        const issueCommentsResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment`, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        const commentsData = await issueCommentsResponse.json();
-
-        var ids = commentsData.comments.map(function(comment) {
-            return parseInt(comment.id, 10);
-          });
-          
-        var bodyData = JSON.stringify({ ids: ids }, null, 2);
-          
-        console.log(bodyData);
-        
-        //TODO - This needs to support pagination. Possibly to be split out into an event queue.
-        const commentBodyResponse = await api.asApp().requestJira(route`/rest/api/3/comment/list`, {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: bodyData
-          });
-
-        const commentBodyResponseJson = await commentBodyResponse.json();
-
-        //console.log('All comments on the issue (within a given page)');
-        //console.log(JSON.stringify(commentBodyResponseJson));        
-        //console.log(`Response: ${commentBodyResponse.status} ${commentBodyResponse.statusText}`);
-        //console.log(await commentBodyResponse.text());
-
-
-        const commentsWithAttachment = commentBodyResponseJson.values.filter(comment => {
-            // Check if the comment's body contains a mediaGroup with a media element having the originalAttachmentMediaId
-            return comment.body.content.some(contentBlock => 
-                contentBlock.type === 'mediaGroup' && 
-                contentBlock.content.some(media => 
-                    media.type === 'media' && 
-                    media.attrs.id === originalAttachmentMediaId
-                )
-            );
-        });
-
-        //console.log(originalAttachmentMediaId);
-        //console.log('comments with attachments')
-        //console.log(JSON.stringify(commentsWithAttachment));
-
-        commentsWithAttachment.forEach(comment => {
-            updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);
-        });
-
-    } catch (error) {
-        console.error('Error processing comments:', error);
-    }
-}
-
-async function deleteAttachment(attachmentId) {
-    try {
-        const response = await api.asApp().requestJira(route`/rest/api/3/attachment/${attachmentId}`, {
-            method: 'DELETE'
-        });
-
-        console.log(`Response: ${response.status} ${response.statusText}`);
-        console.log(await response.text());
-    } catch (error) {
-        console.error('Error deleting attachment:', error);
-    }
 }
 
 async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
@@ -198,12 +74,11 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
     }
 }
 
-resolver.define("processEvent", async ({ payload, context }) => {
-    console.log('Consumer function invoked');
+resolver.define("processHar", async ({ payload, context }) => {
+    console.log('processHar.js consumer function invoked');
     console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
-    console.log('processHar.js');
     console.log(issueIdOrKey, fileName, attachmentId)
 
     try {
@@ -327,4 +202,6 @@ resolver.define("processEvent", async ({ payload, context }) => {
 
 });
 
+console.log(3);
 export const handler = resolver.getDefinitions();
+console.log(4);

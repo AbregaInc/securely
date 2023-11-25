@@ -28,21 +28,19 @@ modules:
       handler: processHar.handler
     - key: config
       handler: config.handler
-    - key: scrub
-      handler: scrub.handler
     - key: process-comment-func
       handler: processComment.handler
   consumer:
-    - key: har-queue-consumer
+    - key: har-processor
       queue: har-queue
       resolver:
         function: process-har-function
-        method: processEvent
+        method: processHar
     - key: comment-processor
       queue: comment-queue
       resolver:
         function: process-comment-func
-        method: processEvent
+        method: processComment
 resources:
   - key: admin-main
     path: static/admin-page/build
