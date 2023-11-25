@@ -58,7 +58,6 @@ permissions:
   external:
     fetch:
       backend:
-        - har.securely.abrega.com
         - api.media.atlassian.com  
   content:
     styles:

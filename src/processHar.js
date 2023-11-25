@@ -128,17 +128,6 @@ resolver.define("processHar", async ({ payload, context }) => {
 
             console.log('scrubbing the file');
 
-            /*
-            const response = await api.fetch(`https://har.securely.abrega.com/scrub`, {
-                body: JSON.stringify(options),
-                method: "post",
-                headers: { 'Content-Type': 'application/json' },
-            });
-            
-            const responseText = await response.text();
-            console.log('Har Cleaner Response Status:', response.status);
-            */
-
             const harData = typeof harObject === 'string' ? harObject : JSON.stringify(harObject);
 
             let scrubbedHarString;
