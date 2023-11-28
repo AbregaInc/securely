@@ -4,19 +4,28 @@ import api, { route } from "@forge/api";
 const resolver = new Resolver();
 
 async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId, newAttachmentId) {
+    console.log('updateComment');
+
+
     try {
+        console.log('issue id', issueIdOrKey);
+        console.log('comment id', commentId);
+
         // Fetch the comment body
+        console.log("VERSION TEST 123456")
         const commentResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
             headers: {
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         });
-
+        console.log('2');
         const commentData = await commentResponse.json();
+        console.log('3');
         const commentBody = commentData.body;
 
-        //console.log("Original Comment Body:");
-        //console.log(JSON.stringify(commentBody));
+        console.log("Original Comment Body:");
+        console.log(JSON.stringify(commentBody));
 
         // Replace the original attachment ID with the new one
         commentBody.content.forEach(contentBlock => {
@@ -30,14 +39,10 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         });
 
 
-        //console.log("Updated Comment Body:");
-        //console.log(JSON.stringify(commentBody));
+        console.log("Updated Comment Body:");
+        console.log(JSON.stringify(commentBody));
 
-        // Update the comment
-
-        // Currently this fails with:
-        // INFO    09:49:46.063  1e238f12-05f3-4703-be2c-2720d7c4f8fd  Update Response: 400 Bad Request
-        // INFO    09:49:46.063  1e238f12-05f3-4703-be2c-2720d7c4f8fd  { errorMessages: [ 'ATTACHMENT_VALIDATION_ERROR' ], errors: {} }
+        // Update the comment 
         const updateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
             method: 'PUT',
             headers: {
@@ -50,7 +55,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         });
 
         console.log(`Update Response: ${updateResponse.status} ${updateResponse.statusText}`);
-        //console.log(await updateResponse.json());
+        console.log(await updateResponse.json());
 
     } catch (error) {
         console.error('Error updating comment:', error);
@@ -106,9 +111,9 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
             );
         });
 
-        //console.log(originalAttachmentMediaId);
-        //console.log('comments with attachments')
-        //console.log(JSON.stringify(commentsWithAttachment));
+        console.log(originalAttachmentMediaId);
+        console.log('comments with attachments')
+        console.log(JSON.stringify(commentsWithAttachment));
 
         commentsWithAttachment.forEach(comment => {
             updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);

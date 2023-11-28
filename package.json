@@ -13,9 +13,9 @@
     "eslint-plugin-react-hooks": "^4.6.0"
   },
   "dependencies": {
-    "@forge/api": "^2.19.4",
+    "@forge/api": "^2.20.1",
     "@forge/events": "^0.8.22",
     "@forge/resolver": "^1.5.20",
-    "@forge/ui": "^1.9.9"
+    "@forge/ui": "^1.10.0"
   }
 }

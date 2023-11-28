@@ -58,7 +58,7 @@ permissions:
   external:
     fetch:
       backend:
-        - api.media.atlassian.com  
+        - api.media.atlassian.com
   content:
     styles:
       - 'unsafe-inline'
