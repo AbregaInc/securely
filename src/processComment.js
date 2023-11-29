@@ -115,10 +115,15 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
         console.log('comments with attachments')
         console.log(JSON.stringify(commentsWithAttachment));
 
-        commentsWithAttachment.forEach(comment => {
-            updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);
-        });
-
+        for (const comment of commentsWithAttachment) {
+            try {
+                await updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);
+    
+            } catch (commentError) {
+                console.error('Error updating comment:', commentError);
+            }
+        }
+        
     } catch (error) {
         console.error('Error processing comments:', error);
     }

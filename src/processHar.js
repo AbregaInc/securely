@@ -48,9 +48,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         const responseJson = await response.json();
         //console.log(JSON.stringify(responseJson[0].id));
 
-        const requestUrl = `/rest/api/3/attachment/content/${responseJson[0].id}`;
-
-        const attachmentResponse = await api.asApp().requestJira(route`${requestUrl}`, {
+        const attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${responseJson[0].id}`, {
             headers: {
                 'Accept': 'application/json'
             }
@@ -79,10 +77,8 @@ resolver.define("processHar", async ({ payload, context }) => {
     console.log(issueIdOrKey, fileName, attachmentId)
 
     try {
-        const requestUrl = `/rest/api/3/attachment/content/${attachmentId}`;
-        console.log(requestUrl);
 
-        const attachmentResponse = await api.asApp().requestJira(route`${requestUrl}`, {
+        const attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${attachmentId}`, {
             headers: {
                 'Accept': 'application/json'
             }
