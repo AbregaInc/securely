@@ -137,83 +137,77 @@ async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachm
         });
 
         const issueData = await issueResponse.json();
-        console.log('issue data')
-        console.log(await JSON.stringify(issueData));
+        console.log('issue data');
+        console.log(JSON.stringify(issueData));
 
         const updatedIssueData = {};
 
-        const description = issueData.fields.description;
+        // Iterate over all fields
+        for (const [fieldName, fieldValue] of Object.entries(issueData.fields)) {
+            if (fieldValue && fieldValue.type === 'doc') {
+                const hasAttachment = fieldValue.content.some(contentBlock => 
+                    contentBlock.type === 'mediaGroup' &&
+                    contentBlock.content.some(media => 
+                        media.type === 'media' && 
+                        media.attrs.id === originalAttachmentMediaId
+                    )
+                );
 
-        const descriptionHasAttachment = description && description.content.some(contentBlock => 
-            contentBlock.type === 'mediaGroup' &&
-            contentBlock.content.some(media => 
-                media.type === 'media' && 
-                media.attrs.id === originalAttachmentMediaId
-            )
-        );
+                if (hasAttachment) {
+                    console.log(`${fieldName} contains the specified attachment.`);
 
-        if (descriptionHasAttachment) {
-            // The description contains the media group with the specified attachment ID
-            console.log("Description contains the specified attachment.");
-
-            // Find and update the media group that contains the original attachment
-            description.content.forEach(contentBlock => {
-                if (contentBlock.type === 'mediaGroup') {
-                    contentBlock.content.forEach(media => {
-                        if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
-                            // Update only the id of the media item
-                            media.attrs.id = newAttachmentId;
+                    // Find and update the media group that contains the original attachment
+                    fieldValue.content.forEach(contentBlock => {
+                        if (contentBlock.type === 'mediaGroup') {
+                            contentBlock.content.forEach(media => {
+                                if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
+                                    // Update only the id of the media item
+                                    media.attrs.id = newAttachmentId;
+                                }
+                            });
                         }
                     });
-                }
-            });
 
-            // Now the description object is updated, and you can set it in the updatedIssueData
-            updatedIssueData.fields = {
-                description: description
-            };
-            
-            console.log('updatedIssueData');
-            console.log(JSON.stringify(updatedIssueData));
-
-            // Update the issue with the updated fields
-            if (Object.keys(updatedIssueData).length) {
-                try {
-                    const issueUpdateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(updatedIssueData)
-                    });
-
-                    console.log(`Response: ${issueUpdateResponse.status} ${issueUpdateResponse.statusText}`);
-
-                    // Check if the response is OK and has content
-                    if (issueUpdateResponse.ok && issueUpdateResponse.status !== 204) {
-                        const responseBody = await issueUpdateResponse.json();
-                        console.log(responseBody);
-                    } else if (issueUpdateResponse.status === 204) {
-                        console.log('Issue updated successfully, but no content in response.');
-                    } else {
-                        console.log('Response received, but it was not successful:', issueUpdateResponse.status);
+                    // Update the field in updatedIssueData
+                    if (!updatedIssueData.fields) {
+                        updatedIssueData.fields = {};
                     }
-                } catch (error) {
-                    console.error('Error occurred while updating the issue:', error);
+                    updatedIssueData.fields[fieldName] = fieldValue;
                 }
-            } else {
-                console.log('Issue does not contain the specified attachment');
             }
-
-
-        } else {
-            // The description does not contain the media group with the specified attachment ID
-            console.log("Description does not contain the specified attachment.");
         }
-                
 
+        console.log('updatedIssueData');
+        console.log(JSON.stringify(updatedIssueData));
 
+        // Update the issue with the updated fields
+        if (Object.keys(updatedIssueData).length) {
+            try {
+                const issueUpdateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedIssueData)
+                });
+
+                console.log(`Response: ${issueUpdateResponse.status} ${issueUpdateResponse.statusText}`);
+
+                if (issueUpdateResponse.ok && issueUpdateResponse.status !== 204) {
+                    const responseBody = await issueUpdateResponse.json();
+                    console.log(responseBody);
+                } else if (issueUpdateResponse.status === 204) {
+                    console.log('Issue updated successfully, but no content in response.');
+                } else {
+                    console.log('Response received, but it was not successful:', issueUpdateResponse.status);
+                }
+            } catch (error) {
+                console.error('Error occurred while updating the issue:', error);
+            }
+        } else {
+            console.log('No fields contain the specified attachment');
+        }
     } catch (error) {
         console.error('Error processing comments:', error);
     }
