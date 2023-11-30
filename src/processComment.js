@@ -12,16 +12,13 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         console.log('comment id', commentId);
 
         // Fetch the comment body
-        console.log("VERSION TEST 123456")
         const commentResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
             headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
         });
-        console.log('2');
         const commentData = await commentResponse.json();
-        console.log('3');
         const commentBody = commentData.body;
 
         console.log("Original Comment Body:");
@@ -37,7 +34,6 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
                 });
             }
         });
-
 
         console.log("Updated Comment Body:");
         console.log(JSON.stringify(commentBody));
@@ -82,7 +78,9 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
           
         console.log(bodyData);
         
-        //TODO - This needs to support pagination. Possibly to be split out into an event queue.
+        // TODO - This needs to support pagination. Possibly to be split out into an event queue.
+        // Maybe not? I tested this with a ton of comments and it seems fine? However, this may fall
+        // apart when we go to process lots of old content
         const commentBodyResponse = await api.asApp().requestJira(route`/rest/api/3/comment/list`, {
             method: 'POST',
             headers: {
@@ -123,11 +121,104 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
                 console.error('Error updating comment:', commentError);
             }
         }
-        
+
     } catch (error) {
         console.error('Error processing comments:', error);
     }
 }
+
+async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachmentId) {
+    try {
+        // Fetch the issue
+        const issueResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}`, {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        const issueData = await issueResponse.json();
+        console.log('issue data')
+        console.log(await JSON.stringify(issueData));
+
+        const updatedIssueData = {};
+
+        const description = issueData.fields.description;
+
+        const descriptionHasAttachment = description && description.content.some(contentBlock => 
+            contentBlock.type === 'mediaGroup' &&
+            contentBlock.content.some(media => 
+                media.type === 'media' && 
+                media.attrs.id === originalAttachmentMediaId
+            )
+        );
+
+        if (descriptionHasAttachment) {
+            // The description contains the media group with the specified attachment ID
+            console.log("Description contains the specified attachment.");
+
+            // Find and update the media group that contains the original attachment
+            description.content.forEach(contentBlock => {
+                if (contentBlock.type === 'mediaGroup') {
+                    contentBlock.content.forEach(media => {
+                        if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
+                            // Update only the id of the media item
+                            media.attrs.id = newAttachmentId;
+                        }
+                    });
+                }
+            });
+
+            // Now the description object is updated, and you can set it in the updatedIssueData
+            updatedIssueData.fields = {
+                description: description
+            };
+            
+            console.log('updatedIssueData');
+            console.log(JSON.stringify(updatedIssueData));
+
+            // Update the issue with the updated fields
+            if (Object.keys(updatedIssueData).length) {
+                try {
+                    const issueUpdateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(updatedIssueData)
+                    });
+
+                    console.log(`Response: ${issueUpdateResponse.status} ${issueUpdateResponse.statusText}`);
+
+                    // Check if the response is OK and has content
+                    if (issueUpdateResponse.ok && issueUpdateResponse.status !== 204) {
+                        const responseBody = await issueUpdateResponse.json();
+                        console.log(responseBody);
+                    } else if (issueUpdateResponse.status === 204) {
+                        console.log('Issue updated successfully, but no content in response.');
+                    } else {
+                        console.log('Response received, but it was not successful:', issueUpdateResponse.status);
+                    }
+                } catch (error) {
+                    console.error('Error occurred while updating the issue:', error);
+                }
+            } else {
+                console.log('Issue does not contain the specified attachment');
+            }
+
+
+        } else {
+            // The description does not contain the media group with the specified attachment ID
+            console.log("Description does not contain the specified attachment.");
+        }
+                
+
+
+    } catch (error) {
+        console.error('Error processing comments:', error);
+    }
+}
+
 
 async function deleteAttachment(attachmentId) {
     try {
@@ -143,16 +234,17 @@ async function deleteAttachment(attachmentId) {
 }
 
 resolver.define("processComment", async ({ payload, context }) => {
-    console.log('Consumer function invoked');
+    console.log('processComments.js');
     console.log(JSON.stringify(context));
 
     const {attachmentId, issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId} = payload;
-    console.log('processComments.js');
+
     console.log(attachmentId, issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId)
 
     try {
                 await deleteAttachment(attachmentId);
                 await processComments(issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId);
+                await processFields(issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId);
                 return Promise.resolve({
                     statusCode: 200 
                 });
