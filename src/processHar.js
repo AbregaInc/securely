@@ -152,6 +152,12 @@ resolver.define("processHar", async ({ payload, context }) => {
             // Delete the original attachments only if the new attachment was created successfully
             if (createAttachmentSuccessful.status) {
 
+                // We use this to look up previously processed attachments. Helps in scenarios where
+                // we have multiple triggers impacting a single object like 2 attachments in one
+                // comment or field.
+                const processLog = 'processLog' + originalAttachmentMediaId;
+                await storage.set(processLog, createAttachmentSuccessful.id);
+
                 // Dispatch comment cleanup to seperate queue
                 const payload = {
                     attachmentId: attachmentId,

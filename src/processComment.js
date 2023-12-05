@@ -1,7 +1,22 @@
 import Resolver from "@forge/resolver";
 import api, { route } from "@forge/api";
+import { storage } from '@forge/api';
 
 const resolver = new Resolver();
+
+async function updateMediaIdsInContentBlock(contentBlock) {
+    if (contentBlock.type === 'mediaGroup') {
+        for (const media of contentBlock.content) {
+            if (media.type === 'media') {
+                const processLog = 'processLog' + media.attrs.id;
+                const storedNewId = await storage.get(processLog);
+                if (storedNewId) {
+                    media.attrs.id = storedNewId;
+                }
+            }
+        }
+    }
+}
 
 async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId, newAttachmentId) {
     console.log('updateComment');
@@ -25,16 +40,10 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         console.log(JSON.stringify(commentBody));
 
         // Replace the original attachment ID with the new one
-        commentBody.content.forEach(contentBlock => {
-            if (contentBlock.type === 'mediaGroup') {
-                contentBlock.content.forEach(media => {
-                    if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
-                        media.attrs.id = newAttachmentId;
-                    }
-                });
-            }
-        });
-
+        for (const contentBlock of commentBody.content) {
+            await updateMediaIdsInContentBlock(contentBlock);
+        }
+        
         console.log("Updated Comment Body:");
         console.log(JSON.stringify(commentBody));
 
@@ -157,16 +166,13 @@ async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachm
                     console.log(`${fieldName} contains the specified attachment.`);
 
                     // Find and update the media group that contains the original attachment
-                    fieldValue.content.forEach(contentBlock => {
-                        if (contentBlock.type === 'mediaGroup') {
-                            contentBlock.content.forEach(media => {
-                                if (media.type === 'media' && media.attrs.id === originalAttachmentMediaId) {
-                                    // Update only the id of the media item
-                                    media.attrs.id = newAttachmentId;
-                                }
-                            });
+                    for (const [fieldName, fieldValue] of Object.entries(issueData.fields)) {
+                        if (fieldValue && fieldValue.type === 'doc') {
+                            for (const contentBlock of fieldValue.content) {
+                                await updateMediaIdsInContentBlock(contentBlock);
+                            }
                         }
-                    });
+                    }
 
                     // Update the field in updatedIssueData
                     if (!updatedIssueData.fields) {
