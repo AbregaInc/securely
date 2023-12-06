@@ -119,6 +119,14 @@ function App() {
                         description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
                     />
 
+                    <ToggleWithLabel
+                        label="Remove the whole response body"
+                        checked={settings.all_resp_body}
+                        onChange={(e) => handleChange('all_resp_body', e)}
+                        id="all_resp_body"
+                        description="<FIX ME>"
+                    />
+
                 </GridColumn>
             </Grid>
         </Page>

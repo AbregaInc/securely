@@ -135,6 +135,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                     scrubAllResponseHeaders: options.all_resp_headers,
                     scrubAllQueryParams: options.all_queryargs,
                     scrubAllPostParams: options.all_postparams,
+                    scrubAllBodyContents: options.all_resp_body,
                 });
                 console.log('Sanitization completed');
             } catch (e) {
