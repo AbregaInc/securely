@@ -10,7 +10,7 @@ resolver.define('setSettings', async (req) => {
 });
 
 resolver.define('getSettings', async () => {
-    const keys = ['all_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
+    const keys = ['all_req_headers', 'all_resp_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
     const settings = {};
     
     for (const key of keys) {

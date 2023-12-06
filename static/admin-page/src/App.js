@@ -52,7 +52,8 @@ function ToggleWithLabel({ label, checked, onChange, id, description }) {
 
 function App() {
     const [settings, setSettings] = useState({
-        all_headers: false,
+        all_req_headers: false,
+        all_resp_headers: false,
         all_cookies: false,
         all_mimetypes: false,
         all_queryargs: false,
@@ -79,10 +80,18 @@ function App() {
                     If you would like to scrub all of a given data element, then please enable that below.</p>
 
                     <ToggleWithLabel
-                        label="Remove all headers"
-                        checked={settings.all_headers}
-                        onChange={(e) => handleChange('all_headers', e)}
-                        id="all_headers"
+                        label="Remove all request headers"
+                        checked={settings.all_req_headers}
+                        onChange={(e) => handleChange('all_req_headers', e)}
+                        id="all_req_headers"
+                        description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
+                    />
+
+                    <ToggleWithLabel
+                        label="Remove all response headers"
+                        checked={settings.all_resp_headers}
+                        onChange={(e) => handleChange('all_resp_headers', e)}
+                        id="all_resp_headers"
                         description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
                     />
 

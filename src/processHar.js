@@ -4,7 +4,7 @@ import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer'; 
 import { storage } from '@forge/api';
-import { sanitize } from "./har_sanitize"; // Import your sanitize function
+import { sanitizeHar } from "./harSanitizer"; // Import your sanitize function
 const { createHash } = require('crypto');
 
 
@@ -99,7 +99,7 @@ resolver.define("processHar", async ({ payload, context }) => {
 
 
         // Fetch the settings from Forge storage
-        const keys = ['all_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
+        const keys = ['all_req_headers', 'all_resp_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
         const settings = {};
 
         for (const key of keys) {
@@ -129,14 +129,12 @@ resolver.define("processHar", async ({ payload, context }) => {
             let scrubbedHarString;
             try {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
-                scrubbedHarString = sanitize(harData, {
-                    scrubWords: options.words,
-                    scrubMimetypes: options.mime_types,
-                    allCookies: options.all_cookies,
-                    allHeaders: options.all_headers,
-                    allMimeTypes: options.all_mimetypes,
-                    allQueryArgs: options.all_queryargs,
-                    allPostParams: options.all_postparams,
+                scrubbedHarString = sanitizeHar(harData, {
+                    scrubAllCookies: options.all_cookies,
+                    scrubAllRequestHeaders: options.all_req_headers,
+                    scrubAllResponseHeaders: options.all_resp_headers,
+                    scrubAllQueryParams: options.all_queryargs,
+                    scrubAllPostParams: options.all_postparams,
                 });
                 console.log('Sanitization completed');
             } catch (e) {
