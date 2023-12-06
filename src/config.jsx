@@ -5,17 +5,24 @@ const resolver = new Resolver();
 
 resolver.define('setSettings', async (req) => {
     const { key, value } = req.payload;
-    await storage.set(key, { toggle: value });
-    return `Setting ${key} set to ${value}`;
+    await storage.set(key, value); // Store the entire value, which can be a boolean or an array
+    return `Setting ${key} set to ${JSON.stringify(value)}`;
 });
 
 resolver.define('getSettings', async () => {
-    const keys = ['all_req_headers', 'all_resp_headers', 'all_cookies', 'all_queryargs', 'all_postparams', 'all_resp_body'];
+    const keys = [
+        'scrubAllRequestHeaders', 'scrubSpecificHeader', 
+        'scrubAllCookies', 'scrubSpecificCookie', 
+        'scrubAllQueryParams', 'scrubSpecificQueryParam', 
+        'scrubAllPostParams', 'scrubSpecificPostParam', 
+        'scrubAllResponseHeaders', 'scrubSpecificResponseHeader', 
+        'scrubAllBodyContents', 'scrubSpecificMimeTypes'
+    ];
     const settings = {};
     
     for (const key of keys) {
         const storedValue = await storage.get(key);
-        settings[key] = storedValue?.toggle ?? false;
+        settings[key] = storedValue ?? (key.includes('scrubAll') ? false : []); // Default to false for booleans, empty array for lists
     }
 
     return settings;

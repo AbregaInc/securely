@@ -52,12 +52,13 @@ function ToggleWithLabel({ label, checked, onChange, id, description }) {
 
 function App() {
     const [settings, setSettings] = useState({
-        all_req_headers: false,
-        all_resp_headers: false,
-        all_cookies: false,
-        all_mimetypes: false,
-        all_queryargs: false,
-        all_postparams: false,
+        scrubAllRequestHeaders: false,
+        scrubAllResponseHeaders: false,
+        scrubAllCookies: false,
+        scrubAllQueryParams: false,
+        scrubAllPostParams: false,
+        scrubAllBodyContents: false, // Assuming this represents 'Remove the whole response body'
+        // Add other settings as necessary
     });
 
     const handleChange = async (key, event) => {
@@ -75,57 +76,57 @@ function App() {
         <Page>
             <Grid>
                 <GridColumn medium={8}>
-                    <Heading level="h600">HAR File Scrubbing Configuration</Heading>
-                    <p style={{marginBottom: token('space.500', '40px')}}>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
-                    If you would like to scrub all of a given data element, then please enable that below.</p>
+                <Heading level="h600">HAR File Scrubbing Configuration</Heading>
+                <p style={{marginBottom: token('space.500', '40px')}}>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
+                If you would like to scrub all of a given data element, then please enable that below.</p>
 
-                    <ToggleWithLabel
-                        label="Remove all request headers"
-                        checked={settings.all_req_headers}
-                        onChange={(e) => handleChange('all_req_headers', e)}
-                        id="all_req_headers"
-                        description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
-                    />
+                <ToggleWithLabel
+                    label="Remove all request headers"
+                    checked={settings.scrubAllRequestHeaders}
+                    onChange={(e) => handleChange('scrubAllRequestHeaders', e)}
+                    id="scrubAllRequestHeaders"
+                    description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
+                />
 
-                    <ToggleWithLabel
-                        label="Remove all response headers"
-                        checked={settings.all_resp_headers}
-                        onChange={(e) => handleChange('all_resp_headers', e)}
-                        id="all_resp_headers"
-                        description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
-                    />
+                <ToggleWithLabel
+                    label="Remove all response headers"
+                    checked={settings.scrubAllResponseHeaders}
+                    onChange={(e) => handleChange('scrubAllResponseHeaders', e)}
+                    id="scrubAllResponseHeaders"
+                    description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
+                />
 
-                    <ToggleWithLabel
-                        label="Remove all cookies"
-                        checked={settings.all_cookies}
-                        onChange={(e) => handleChange('all_cookies', e)}
-                        id="all_cookies"
-                        description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
-                    />
+                <ToggleWithLabel
+                    label="Remove all cookies"
+                    checked={settings.scrubAllCookies}
+                    onChange={(e) => handleChange('scrubAllCookies', e)}
+                    id="scrubAllCookies"
+                    description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
+                />
 
-                    <ToggleWithLabel
-                        label="Remove all query arguments"
-                        checked={settings.all_queryargs}
-                        onChange={(e) => handleChange('all_queryargs', e)}
-                        id="all_queryargs"
-                        description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
-                    />
+                <ToggleWithLabel
+                    label="Remove all query arguments"
+                    checked={settings.scrubAllQueryParams}
+                    onChange={(e) => handleChange('scrubAllQueryParams', e)}
+                    id="scrubAllQueryParams"
+                    description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
+                />
 
-                    <ToggleWithLabel
-                        label="Remove all POST parameters"
-                        checked={settings.all_postparams}
-                        onChange={(e) => handleChange('all_postparams', e)}
-                        id="all_postparams"
-                        description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
-                    />
+                <ToggleWithLabel
+                    label="Remove all POST parameters"
+                    checked={settings.scrubAllPostParams}
+                    onChange={(e) => handleChange('scrubAllPostParams', e)}
+                    id="scrubAllPostParams"
+                    description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
+                />
 
-                    <ToggleWithLabel
-                        label="Remove the whole response body"
-                        checked={settings.all_resp_body}
-                        onChange={(e) => handleChange('all_resp_body', e)}
-                        id="all_resp_body"
-                        description="<FIX ME>"
-                    />
+                <ToggleWithLabel
+                    label="Remove the whole response body"
+                    checked={settings.scrubBodyContents}
+                    onChange={(e) => handleChange('scrubBodyContents', e)}
+                    id="scrubAllBodyContents"
+                    description="The response body often contains the bulk of the data returned by a request, including HTML, JSON, XML, or other formats. Removing it can prevent sensitive data exposure, particularly in responses that include user or application data."
+                />
 
                 </GridColumn>
             </Grid>

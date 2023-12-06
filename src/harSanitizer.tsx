@@ -18,6 +18,8 @@ export type SanitizeOptions = {
 export function sanitizeHar(input: string, options?: SanitizeOptions): string {
     const har: Har = JSON.parse(input);
 
+    console.log('options ', options);
+
     har.log.entries.forEach(entry => {
         sanitizeRequest(entry.request, options);
         sanitizeResponse(entry.response, options);

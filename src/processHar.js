@@ -99,7 +99,12 @@ resolver.define("processHar", async ({ payload, context }) => {
 
 
         // Fetch the settings from Forge storage
-        const keys = ['all_req_headers', 'all_resp_headers', 'all_cookies', 'all_mimetypes', 'all_queryargs', 'all_postparams'];
+        const keys = ['scrubAllRequestHeaders', 'scrubSpecificHeader', 
+        'scrubAllCookies', 'scrubSpecificCookie', 
+        'scrubAllQueryParams', 'scrubSpecificQueryParam', 
+        'scrubAllPostParams', 'scrubSpecificPostParam', 
+        'scrubAllResponseHeaders', 'scrubSpecificResponseHeader', 
+        'scrubAllBodyContents', 'scrubSpecificMimeTypes'];
         const settings = {};
 
         for (const key of keys) {
