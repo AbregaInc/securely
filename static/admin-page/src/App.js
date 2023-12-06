@@ -104,14 +104,6 @@ function App() {
                     />
 
                     <ToggleWithLabel
-                        label="Remove all MIME types"
-                        checked={settings.all_mimetypes}
-                        onChange={(e) => handleChange('all_mimetypes', e)}
-                        id="all_mimetypes"
-                        description="MIME types are identifiers used to specify the nature and format of a document, file, or assortment of bytes. They are important in HTTP to indicate the type of content being transmitted, such as text/html for HTML pages, application/json for JSON data, or image/png for PNG images."
-                    />
-
-                    <ToggleWithLabel
                         label="Remove all query arguments"
                         checked={settings.all_queryargs}
                         onChange={(e) => handleChange('all_queryargs', e)}
@@ -126,6 +118,7 @@ function App() {
                         id="all_postparams"
                         description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
                     />
+
                 </GridColumn>
             </Grid>
         </Page>
