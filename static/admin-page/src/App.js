@@ -116,15 +116,21 @@ function App() {
     // Function to handle addition of a tag
     const handleAddTag = async (key, newTag) => {
         const currentTags = Array.isArray(settings[key]) ? settings[key] : [];
-        const updatedTags = [...currentTags, newTag];
-        setSettings(prevSettings => ({ ...prevSettings, [key]: updatedTags }));
-        await invoke('setSettings', { key, value: updatedTags });
+    
+        // Check if the tag already exists
+        if (!currentTags.includes(newTag)) {
+            const updatedTags = [...currentTags, newTag];
+            setSettings(prevSettings => ({ ...prevSettings, [key]: updatedTags }));
+            await invoke('setSettings', { key, value: updatedTags });
+        } else {
+            // Optionally, provide feedback to the user that the tag already exists
+            console.log("Tag already exists:", newTag);
+            // Or use a UI element to show a message
+        }
     };
-
-    // Function to handle removal of a tag
+    
     const handleRemoveTag = async (key, tagToRemove) => {
-        const currentTags = Array.isArray(settings[key]) ? settings[key] : [];
-        const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+        const updatedTags = settings[key].filter(tag => tag !== tagToRemove);
         setSettings(prevSettings => ({ ...prevSettings, [key]: updatedTags }));
         await invoke('setSettings', { key, value: updatedTags });
     };
