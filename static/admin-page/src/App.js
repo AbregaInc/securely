@@ -63,9 +63,9 @@ function CustomLabel({ htmlFor, children, style }) {
             <p style={descriptionStyle}>{description}</p>
             {tagData && Array.isArray(tagData) && (
                 <TagGroup>
-                    {tagData.map((tag, index) => (
+                    {tagData.map((tag) => (
                         <Tag
-                            key={index}
+                            key={tag} // Use the tag itself as a key
                             text={tag}
                             onAfterRemoveAction={() => onRemoveTag(tag)}
                             removeButtonText="Remove tag"
@@ -73,6 +73,7 @@ function CustomLabel({ htmlFor, children, style }) {
                     ))}
                 </TagGroup>
             )}
+
             <div style={{ marginTop: '10px' }}>
                 <TextField 
                     value={inputValue}
@@ -90,6 +91,7 @@ function CustomLabel({ htmlFor, children, style }) {
         </div>
     );
 }
+
 
 function App() {
     const [settings, setSettings] = useState({
@@ -128,7 +130,7 @@ function App() {
             // Or use a UI element to show a message
         }
     };
-    
+
     const handleRemoveTag = async (key, tagToRemove) => {
         const currentTags = Array.isArray(settings[key]) ? settings[key] : [];
         const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
@@ -136,13 +138,9 @@ function App() {
         console.log(`Before state update:`, settings[key]); // Log current state
         console.log(`Removing tag:`, tagToRemove);
         console.log(`Updated tags:`, updatedTags); // Log updated tags
-    
 
         // Update the state
         setSettings(prevSettings => ({ ...prevSettings, [key]: updatedTags }));
-    
-        // Wait for a moment to ensure state updates (optional, for debugging)
-        await new Promise(resolve => setTimeout(resolve, 100));
     
         // Persist the change to the backend using the updatedTags array
         await invoke('setSettings', { key, value: updatedTags });
