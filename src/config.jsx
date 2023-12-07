@@ -5,9 +5,18 @@ const resolver = new Resolver();
 
 resolver.define('setSettings', async (req) => {
     const { key, value } = req.payload;
-    await storage.set(key, value); // Store the entire value, which can be a boolean or an array
-    console.log(`Setting ${key} set to ${JSON.stringify(value)}`);
-    return `Setting ${key} set to ${JSON.stringify(value)}`;
+    const currentValue = await storage.get(key) || [];
+    let newValue;
+
+    if (Array.isArray(value)) { // Handling arrays for specific settings
+        newValue = [...currentValue, ...value];
+    } else {
+        newValue = value;
+    }
+
+    await storage.set(key, newValue);
+    console.log(`Setting ${key} set to ${JSON.stringify(newValue)}`);
+    return `Setting ${key} set to ${JSON.stringify(newValue)}`;
 });
 
 resolver.define('getSettings', async () => {
