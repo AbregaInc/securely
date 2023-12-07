@@ -101,7 +101,7 @@ function sanitizeResponse(response: Response, options: SanitizeOptions = {}) {
 
     // Handling response body contents and MIME types
     if (response.content) {
-        if (options.scrubAllBodyContents && !options.scrubAllBodyContents.includes(response.content.mimeType)) {
+        if (options.scrubAllBodyContents && !options.scrubSpecificMimeTypes?.includes(response.content.mimeType)) {
             response.content.text = '[Content Redacted]';
         }
         if (options.scrubSpecificMimeTypes && options.scrubSpecificMimeTypes.includes(response.content.mimeType.toLowerCase())) {
