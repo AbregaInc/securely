@@ -5,6 +5,10 @@ import Page, { Grid, GridColumn } from '@atlaskit/page';
 import '@atlaskit/css-reset';
 import Heading from '@atlaskit/heading';
 import { token } from '@atlaskit/tokens';
+import TagGroup from '@atlaskit/tag-group';
+import Tag from '@atlaskit/tag';
+import TextField from '@atlaskit/textfield';
+import Button from '@atlaskit/button';
 
 await view.theme.enable();
 
@@ -16,7 +20,9 @@ function CustomLabel({ htmlFor, children, style }) {
     );
   }
 
-function ToggleWithLabel({ label, checked, onChange, id, description }) {
+  function ToggleWithLabel({ label, checked, onChange, id, description, tagData, onAddTag, onRemoveTag }) {
+
+
     const labelStyle = {
         flexGrow: 1,
         marginRight: token('space.100', '8px'), 
@@ -39,13 +45,48 @@ function ToggleWithLabel({ label, checked, onChange, id, description }) {
         color: token('color.text.accent.gray', '#6B778C'),
       };
 
-    return (
+      const [inputValue, setInputValue] = useState('');
+
+      const handleAddTag = () => {
+        if (inputValue.trim()) {
+            onAddTag(inputValue); // Pass the inputValue, not the id
+            setInputValue('');
+        }
+      };
+
+      return (
         <div style={toggleWrapperStyle}>
             <div style={toggleRowStyle}>
                 <CustomLabel htmlFor={id} style={labelStyle}>{label}</CustomLabel>
                 <Toggle id={id} isChecked={checked} onChange={onChange} />
             </div>
             <p style={descriptionStyle}>{description}</p>
+            {tagData && Array.isArray(tagData) && (
+                <TagGroup>
+                    {tagData.map((tag, index) => (
+                        <Tag
+                            key={index}
+                            text={tag}
+                            onAfterRemoveAction={() => onRemoveTag(id, tag)}
+                            removeButtonText="Remove tag"
+                        />
+                    ))}
+                </TagGroup>
+            )}
+            <div style={{ marginTop: '10px' }}>
+                <TextField 
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Add a tag" 
+                />
+                <Button 
+                    style={{ marginLeft: '10px' }} 
+                    onClick={handleAddTag}
+                    isDisabled={!inputValue.trim()}
+                >
+                    Add
+                </Button>
+            </div>
         </div>
     );
 }
@@ -57,15 +98,35 @@ function App() {
         scrubAllCookies: false,
         scrubAllQueryParams: false,
         scrubAllPostParams: false,
-        scrubAllBodyContents: false, // Assuming this represents 'Remove the whole response body'
-        // Add other settings as necessary
+        scrubAllBodyContents: false, 
+        scrubSpecificHeader: [],
+        scrubSpecificCookie: [],
+        scrubSpecificQueryParam: [], 
+        scrubSpecificPostParam: [], 
+        scrubSpecificResponseHeader: [], 
+        scrubSpecificMimeTypes: [],
     });
 
     const handleChange = async (key, event) => {
         const newValue = event.target.checked;
-        const newSettings = { ...settings, [key]: newValue };
-        setSettings(newSettings);
+        setSettings(prevSettings => ({ ...prevSettings, [key]: newValue }));
         await invoke('setSettings', { key, value: newValue });
+    };
+
+    // Function to handle addition of a tag
+    const handleAddTag = async (key, newTag) => {
+        const currentTags = Array.isArray(settings[key]) ? settings[key] : [];
+        const updatedTags = [...currentTags, newTag];
+        setSettings(prevSettings => ({ ...prevSettings, [key]: updatedTags }));
+        await invoke('setSettings', { key, value: updatedTags });
+    };
+
+    // Function to handle removal of a tag
+    const handleRemoveTag = async (key, tagToRemove) => {
+        const currentTags = Array.isArray(settings[key]) ? settings[key] : [];
+        const updatedTags = currentTags.filter(tag => tag !== tagToRemove);
+        setSettings(prevSettings => ({ ...prevSettings, [key]: updatedTags }));
+        await invoke('setSettings', { key, value: updatedTags });
     };
 
     useEffect(() => {
@@ -85,6 +146,9 @@ function App() {
                     checked={settings.scrubAllRequestHeaders}
                     onChange={(e) => handleChange('scrubAllRequestHeaders', e)}
                     id="scrubAllRequestHeaders"
+                    tagData={settings.scrubSpecificHeader}
+                    onAddTag={(tag) => handleAddTag('scrubSpecificHeader', tag)}
+                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificHeader', tag)}
                     description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
                 />
 
@@ -93,6 +157,9 @@ function App() {
                     checked={settings.scrubAllResponseHeaders}
                     onChange={(e) => handleChange('scrubAllResponseHeaders', e)}
                     id="scrubAllResponseHeaders"
+                    tagData={settings.scrubSpecificResponseHeader}
+                    onAddTag={(tag) => handleAddTag('scrubSpecificResponseHeader', tag)}
+                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificResponseHeader', tag)}
                     description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
                 />
 
@@ -101,6 +168,9 @@ function App() {
                     checked={settings.scrubAllCookies}
                     onChange={(e) => handleChange('scrubAllCookies', e)}
                     id="scrubAllCookies"
+                    tagData={settings.scrubSpecificCookie}
+                    onAddTag={(tag) => handleAddTag('scrubSpecificCookie', tag)}
+                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificCookie', tag)}
                     description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
                 />
 
@@ -109,6 +179,9 @@ function App() {
                     checked={settings.scrubAllQueryParams}
                     onChange={(e) => handleChange('scrubAllQueryParams', e)}
                     id="scrubAllQueryParams"
+                    tagData={settings.scrubSpecificQueryParam}
+                    onAddTag={(tag) => handleAddTag('scrubSpecificQueryParam', tag)}
+                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificQueryParam', tag)}
                     description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
                 />
 
@@ -117,6 +190,9 @@ function App() {
                     checked={settings.scrubAllPostParams}
                     onChange={(e) => handleChange('scrubAllPostParams', e)}
                     id="scrubAllPostParams"
+                    tagData={settings.scrubSpecificPostParam}
+                    onAddTag={(tag) => handleAddTag('scrubSpecificPostParam', tag)}
+                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
                     description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
                 />
 
