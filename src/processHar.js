@@ -99,17 +99,19 @@ resolver.define("processHar", async ({ payload, context }) => {
 
 
         // Fetch the settings from Forge storage
-        const keys = ['scrubAllRequestHeaders', 'scrubSpecificHeader', 
-        'scrubAllCookies', 'scrubSpecificCookie', 
-        'scrubAllQueryParams', 'scrubSpecificQueryParam', 
-        'scrubAllPostParams', 'scrubSpecificPostParam', 
-        'scrubAllResponseHeaders', 'scrubSpecificResponseHeader', 
-        'scrubAllBodyContents', 'scrubSpecificMimeTypes'];
+        const keys = [
+            'scrubAllRequestHeaders', 'scrubSpecificHeader', 
+            'scrubAllCookies', 'scrubSpecificCookie', 
+            'scrubAllQueryParams', 'scrubSpecificQueryParam', 
+            'scrubAllPostParams', 'scrubSpecificPostParam', 
+            'scrubAllResponseHeaders', 'scrubSpecificResponseHeader', 
+            'scrubAllBodyContents', 'scrubSpecificMimeTypes'
+        ];
         const settings = {};
-
+        
         for (const key of keys) {
             const storedValue = await storage.get(key);
-            settings[key] = storedValue?.toggle ?? false;
+            settings[key] = storedValue ?? (key.includes('scrubAll') ? false : []); // Default to false for booleans, empty array for lists
         }
 
         // Construct the options object
@@ -119,7 +121,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             ...settings  // Spread the settings into the options object
         };
 
-        //console.log('Scrub options: ', JSON.stringify(options));
+        console.log('Scrub options: ', JSON.stringify(options));
 
 
 
@@ -135,12 +137,12 @@ resolver.define("processHar", async ({ payload, context }) => {
             try {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
                 scrubbedHarString = sanitizeHar(harData, {
-                    scrubAllCookies: options.all_cookies,
-                    scrubAllRequestHeaders: options.all_req_headers,
-                    scrubAllResponseHeaders: options.all_resp_headers,
-                    scrubAllQueryParams: options.all_queryargs,
-                    scrubAllPostParams: options.all_postparams,
-                    scrubAllBodyContents: options.all_resp_body,
+                    scrubAllCookies: options.scrubAllCookies,
+                    scrubAllRequestHeaders: options.scrubAllRequestHeaders,
+                    scrubAllResponseHeaders: options.scrubAllResponseHeaders,
+                    scrubAllQueryParams: options.scrubAllQueryParams,
+                    scrubAllPostParams: options.scrubAllPostParams,
+                    scrubAllBodyContents: options.scrubAllBodyContents,
                 });
                 console.log('Sanitization completed');
             } catch (e) {

@@ -122,8 +122,8 @@ function App() {
 
                 <ToggleWithLabel
                     label="Remove the whole response body"
-                    checked={settings.scrubBodyContents}
-                    onChange={(e) => handleChange('scrubBodyContents', e)}
+                    checked={settings.scrubAllBodyContents}
+                    onChange={(e) => handleChange('scrubAllBodyContents', e)}
                     id="scrubAllBodyContents"
                     description="The response body often contains the bulk of the data returned by a request, including HTML, JSON, XML, or other formats. Removing it can prevent sensitive data exposure, particularly in responses that include user or application data."
                 />
