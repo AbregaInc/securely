@@ -47,47 +47,52 @@ function CustomLabel({ htmlFor, children, style }) {
 
       const [inputValue, setInputValue] = useState('');
 
-      const handleAddTag = () => {
+    const handleAddTagInternal = () => {
         if (inputValue.trim()) {
-            onAddTag(inputValue); // Pass the inputValue, not the id
+            onAddTag(inputValue);
             setInputValue('');
         }
-      };
+    };
 
-      return (
+    // Condition to check if tag-related elements should be rendered
+    const shouldRenderTags = tagData && onAddTag && onRemoveTag;
+
+    return (
         <div style={toggleWrapperStyle}>
             <div style={toggleRowStyle}>
                 <CustomLabel htmlFor={id} style={labelStyle}>{label}</CustomLabel>
                 <Toggle id={id} isChecked={checked} onChange={onChange} />
             </div>
             <p style={descriptionStyle}>{description}</p>
-            {tagData && Array.isArray(tagData) && (
-                <TagGroup>
-                    {tagData.map((tag) => (
-                        <Tag
-                            key={tag} // Use the tag itself as a key
-                            text={tag}
-                            onAfterRemoveAction={() => onRemoveTag(tag)}
-                            removeButtonText="Remove tag"
-                        />
-                    ))}
-                </TagGroup>
-            )}
 
-            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center' }}>
-                <TextField 
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Add a tag" 
-                />
-                <Button 
-                    style={{ marginLeft: '10px' }} 
-                    onClick={handleAddTag}
-                    isDisabled={!inputValue.trim()}
-                >
-                    Add
-                </Button>
-            </div>
+            {shouldRenderTags && (
+                <>
+                    <TagGroup>
+                        {tagData.map((tag) => (
+                            <Tag
+                                key={tag} // Use the tag itself as a key
+                                text={tag}
+                                onAfterRemoveAction={() => onRemoveTag(tag)}
+                                removeButtonText="Remove tag"
+                            />
+                        ))}
+                    </TagGroup>
+                    <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center' }}>
+                        <TextField 
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder="Add a tag" 
+                        />
+                        <Button 
+                            style={{ marginLeft: '10px' }} 
+                            onClick={handleAddTagInternal}
+                            isDisabled={!inputValue.trim()}
+                        >
+                            Add
+                        </Button>
+                    </div>
+                </>
+            )}
         </div>
     );
 }
