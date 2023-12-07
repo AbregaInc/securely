@@ -37,11 +37,11 @@ function CustomLabel({ htmlFor, children, style }) {
       const toggleRowStyle = {
         display: 'flex',
         alignItems: 'center',
-        marginBottom: token('space.100', '8px'),
+        marginBottom: token('space.200', '16px'),
       };
       
       const descriptionStyle = {
-        fontSize: token('space.200', '16px'),
+        fontSize: token('space.150', '14px'),
         color: token('color.text.accent.gray', '#6B778C'),
       };
 
@@ -74,7 +74,7 @@ function CustomLabel({ htmlFor, children, style }) {
                 </TagGroup>
             )}
 
-            <div style={{ marginTop: '10px' }}>
+            <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center' }}>
                 <TextField 
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
