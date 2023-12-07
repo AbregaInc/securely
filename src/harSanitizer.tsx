@@ -29,6 +29,35 @@ export function sanitizeHar(input: string, options?: SanitizeOptions): string {
 }
 
 function sanitizeRequest(request: Request, options: SanitizeOptions = {}) {
+
+    console.log('Options in harSanitizer: ', options);
+
+/*
+
+if (options.scrubAllRequestHeaders) {
+    console.log('Scrubbing all request headers');
+    request.headers = options.scrubSpecificHeader ? 
+        request.headers.filter(header => {
+            const shouldKeep = options.scrubSpecificHeader?.some(specificHeader => 
+                specificHeader.toLowerCase() === header.name.toLowerCase());
+            console.log(`Checking header ${header.name}: Keep? ${shouldKeep}`);
+            return shouldKeep;
+        }) : [];
+    console.log('Final headers after scrubbing all: ', request.headers);
+} else if (options.scrubSpecificHeader) {
+    console.log('Scrubbing specific request headers:', options.scrubSpecificHeader);
+    request.headers = request.headers.filter(header => {
+        const shouldRemove = options.scrubSpecificHeader?.some(specificHeader => 
+            specificHeader.toLowerCase() === header.name.toLowerCase());
+        console.log(`Checking header ${header.name}: Remove? ${shouldRemove}`);
+        return !shouldRemove;
+    });
+    console.log('Final headers after scrubbing specific: ', request.headers);
+}
+
+*/
+
+
     // Handling headers
     if (options.scrubAllRequestHeaders) {
         request.headers = options.scrubSpecificHeader ? 
@@ -101,6 +130,16 @@ function sanitizeResponse(response: Response, options: SanitizeOptions = {}) {
 
     // Handling response body contents and MIME types
     if (response.content) {
+        if (options.scrubAllBodyContents) {
+            response.content.text = '[Content Redacted]';
+        }
+        if (options.scrubSpecificMimeTypes && options.scrubSpecificMimeTypes.includes(response.content.mimeType.toLowerCase())) {
+            response.content.text = '[Content Redacted due to MIME Type]';
+        }
+    }
+
+    /*
+        if (response.content) {
         if (options.scrubAllBodyContents && !options.scrubAllBodyContents.includes(response.content.mimeType)) {
             response.content.text = '[Content Redacted]';
         }
@@ -108,4 +147,5 @@ function sanitizeResponse(response: Response, options: SanitizeOptions = {}) {
             response.content.text = '[Content Redacted due to MIME Type]';
         }
     }
+    */
 }

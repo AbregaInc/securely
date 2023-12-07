@@ -6,6 +6,7 @@ const resolver = new Resolver();
 resolver.define('setSettings', async (req) => {
     const { key, value } = req.payload;
     await storage.set(key, value);
+    await storage.set('scrubAllBodyContents', '');
     console.log(`Setting ${key} set to ${JSON.stringify(value)}`);
     return `Setting ${key} set to ${JSON.stringify(value)}`;
 });

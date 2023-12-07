@@ -121,7 +121,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             ...settings  // Spread the settings into the options object
         };
 
-        console.log('Scrub options: ', JSON.stringify(options));
+        //console.log('Scrub options: ', JSON.stringify(options));
 
 
 
@@ -138,12 +138,19 @@ resolver.define("processHar", async ({ payload, context }) => {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
                 scrubbedHarString = sanitizeHar(harData, {
                     scrubAllCookies: options.scrubAllCookies,
+                    scrubSpecificCookie: options.scrubSpecificCookie,
                     scrubAllRequestHeaders: options.scrubAllRequestHeaders,
+                    scrubSpecificHeader: options.scrubSpecificHeader,
                     scrubAllResponseHeaders: options.scrubAllResponseHeaders,
+                    scrubSpecificResponseHeader: options.scrubSpecificResponseHeader,
                     scrubAllQueryParams: options.scrubAllQueryParams,
+                    scrubSpecificQueryParam: options.scrubSpecificQueryParam,
                     scrubAllPostParams: options.scrubAllPostParams,
+                    scrubSpecificPostParam: options.scrubSpecificPostParam,
                     scrubAllBodyContents: options.scrubAllBodyContents,
+                    scrubSpecificMimeTypes: options.scrubSpecificMimeTypes
                 });
+
                 console.log('Sanitization completed');
             } catch (e) {
                 console.error('Error during sanitization:', e);
