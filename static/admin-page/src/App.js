@@ -45,13 +45,12 @@ function CustomLabel({ htmlFor, children, style }) {
       const toggleWrapperStyle = {
         display: 'flex',
         flexDirection: 'column',
-        marginBottom: token('space.250', '20px'),
+        marginBottom: token('space.500', '40px'),
       };
       
       const toggleRowStyle = {
         display: 'flex',
         alignItems: 'center',
-        marginBottom: token('space.200', '16px'),
       };
       
       const descriptionStyle = {
@@ -212,8 +211,8 @@ function App() {
                     onAddTag={(tag) => handleAddTag('scrubSpecificHeader', tag)}
                     onRemoveTag={(tag) => handleRemoveTag('scrubSpecificHeader', tag)}
                     description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
-                    subHeadingOn="Except for these request headers"
-                    subHeadingOff="And remove these request headers"
+                    subHeadingOn="Exclude these request headers"
+                    subHeadingOff="Only remove these request headers"
                     subDescriptionOn="Removes all request headers except the ones listed below."
                     subDescriptionOff="Removes only the request headers listed below."
                 />
@@ -227,8 +226,8 @@ function App() {
                     onAddTag={(tag) => handleAddTag('scrubSpecificResponseHeader', tag)}
                     onRemoveTag={(tag) => handleRemoveTag('scrubSpecificResponseHeader', tag)}
                     description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
-                    subHeadingOn="Except for these response headers"
-                    subHeadingOff="And remove these response headers"
+                    subHeadingOn="Exclude these response headers"
+                    subHeadingOff="Only remove these response headers"
                     subDescriptionOn="Removes all request response except the ones listed below."
                     subDescriptionOff="Removes only the response headers listed below."
                 />
@@ -242,8 +241,8 @@ function App() {
                     onAddTag={(tag) => handleAddTag('scrubSpecificCookie', tag)}
                     onRemoveTag={(tag) => handleRemoveTag('scrubSpecificCookie', tag)}
                     description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
-                    subHeadingOn="Except for these cookies"
-                    subHeadingOff="And remove these cookies"
+                    subHeadingOn="Exclude these cookies"
+                    subHeadingOff="Only remove these cookies"
                     subDescriptionOn="Removes all cookies except the ones listed below."
                     subDescriptionOff="Removes only the cookies listed below."
                 />
@@ -257,8 +256,8 @@ function App() {
                     onAddTag={(tag) => handleAddTag('scrubSpecificQueryParam', tag)}
                     onRemoveTag={(tag) => handleRemoveTag('scrubSpecificQueryParam', tag)}
                     description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
-                    subHeadingOn="Except for these query arguments"
-                    subHeadingOff="And remove these query arguments"
+                    subHeadingOn="Exclude these query arguments"
+                    subHeadingOff="Only remove these query arguments"
                     subDescriptionOn="Removes all query arguments except the ones listed below."
                     subDescriptionOff="Removes only the query arguments listed below."
                 />
@@ -272,8 +271,8 @@ function App() {
                     onAddTag={(tag) => handleAddTag('scrubSpecificPostParam', tag)}
                     onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
                     description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are part of the request body and are a more secure way of transmitting sensitive information, as they are not exposed in URLs or server logs."
-                    subHeadingOn="Except for these POST parameters"
-                    subHeadingOff="And remove these POST parameters"
+                    subHeadingOn="Exclude these POST parameters"
+                    subHeadingOff="Only remove these POST parameters"
                     subDescriptionOn="Removes all POST parameters except the ones listed below."
                     subDescriptionOff="Removes only the POST parameters listed below."
                 />
