@@ -230,15 +230,4 @@ function sanitizeResponse(response: Response, options: SanitizeOptions = {}) {
     
         console.log('Final response content after possible redactions: ', response.content.text);
     }
-
-    /*
-        if (response.content) {
-        if (options.scrubAllBodyContents && !options.scrubAllBodyContents.includes(response.content.mimeType)) {
-            response.content.text = '[Content Redacted]';
-        }
-        if (options.scrubSpecificMimeTypes && options.scrubSpecificMimeTypes.includes(response.content.mimeType.toLowerCase())) {
-            response.content.text = '[Content Redacted due to MIME Type]';
-        }
-    }
-    */
 }
