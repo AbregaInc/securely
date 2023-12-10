@@ -211,9 +211,7 @@ function sanitizeResponse(response: Response, options: SanitizeOptions = {}) {
         if (options.scrubAllBodyContents) {
             console.log('Redacting all body contents');
             response.content.text = '[Content Redacted]';
-        }
-    
-        if (options.scrubSpecificMimeTypes) {
+        } else if (options.scrubSpecificMimeTypes) {
             console.log('Checking for specific MIME types to scrub in response content');
             const mimeType = response.content.mimeType.toLowerCase();
             console.log(`Response content MIME type: ${mimeType}`);
