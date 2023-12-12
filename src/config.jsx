@@ -1,6 +1,24 @@
 import Resolver from '@forge/resolver';
 import { storage } from '@forge/api';
 
+import { defaultMimeTypesList, defaultWordList } from './harSanitizer';
+
+const defaultSettings = {
+    'scrubAllRequestHeaders': false,
+    'scrubSpecificHeader': defaultWordList,
+    'scrubAllCookies': false,
+    'scrubSpecificCookie': defaultWordList,
+    'scrubAllQueryParams': false,
+    'scrubSpecificQueryParam': defaultWordList,
+    'scrubAllPostParams': false,
+    'scrubSpecificPostParam': defaultWordList,
+    'scrubAllResponseHeaders': false,
+    'scrubSpecificResponseHeader': defaultWordList,
+    'scrubAllBodyContents': false,
+    'scrubSpecificMimeTypes': defaultMimeTypesList
+};
+
+
 const resolver = new Resolver();
 
 resolver.define('setSettings', async (req) => {
@@ -12,22 +30,39 @@ resolver.define('setSettings', async (req) => {
 });
 
 resolver.define('getSettings', async () => {
-    const keys = [
-        'scrubAllRequestHeaders', 'scrubSpecificHeader', 
-        'scrubAllCookies', 'scrubSpecificCookie', 
-        'scrubAllQueryParams', 'scrubSpecificQueryParam', 
-        'scrubAllPostParams', 'scrubSpecificPostParam', 
-        'scrubAllResponseHeaders', 'scrubSpecificResponseHeader', 
-        'scrubAllBodyContents', 'scrubSpecificMimeTypes'
-    ];
-    const settings = {};
 
-    for (const key of keys) {
+    const settings = {};
+    let isInitialized = false;
+
+    for (const [key, defaultValue] of Object.entries(defaultSettings)) {
         const storedValue = await storage.get(key);
-        settings[key] = storedValue ?? (key.includes('scrubAll') ? false : []);
+        if (storedValue === undefined) {
+            isInitialized = true;
+            settings[key] = defaultValue;
+        } else {
+            settings[key] = storedValue;
+        }
+    }
+
+    if (isInitialized) {
+        // Save default settings if it's the first run
+        await Promise.all(
+            Object.entries(settings).map(([key, value]) =>
+                storage.set(key, value)
+            )
+        );
     }
 
     return settings;
+});
+
+resolver.define('resetToDefaults', async () => {
+    await Promise.all(
+        Object.entries(defaultSettings).map(([key, defaultValue]) =>
+            storage.set(key, defaultValue)
+        )
+    );
+    return 'Settings reset to defaults';
 });
 
 export const handler = resolver.getDefinitions();

@@ -11,10 +11,46 @@ export type SanitizeOptions = {
     scrubSpecificPostParam?: string[];
     scrubAllResponseHeaders?: boolean;
     scrubSpecificResponseHeader?: string[];
-    scrubAllBodyContents?: string[];
+    scrubAllBodyContents?: boolean;
     scrubSpecificMimeTypes?: string[];
 };
 
+export const defaultMimeTypesList = [
+    "application/javascript",
+    "text/javascript"
+];
+
+export const defaultWordList = [
+	"Authorization",
+	"SAMLRequest",
+	"SAMLResponse",
+	"access_token",
+	"appID",
+	"assertion",
+	"auth",
+	"authenticity_token",
+	"challenge",
+	"client_id",
+	"client_secret",
+	"code",
+	"code_challenge",
+	"code_verifier",
+	"email",
+	"facetID",
+	"fcParams",
+	"id_token",
+	"password",
+	"refresh_token",
+	"serverData",
+	"shdf",
+	"state",
+	"token",
+	"usg",
+	"vses2",
+	"x-client-data",
+];
+
+/*
 export function sanitizeHar(input: string, options?: SanitizeOptions): string {
     const har: Har = JSON.parse(input);
 
@@ -23,6 +59,37 @@ export function sanitizeHar(input: string, options?: SanitizeOptions): string {
     har.log.entries.forEach(entry => {
         sanitizeRequest(entry.request, options);
         sanitizeResponse(entry.response, options);
+    });
+
+    return JSON.stringify(har, null, 2);
+}
+*/
+
+
+export function sanitizeHar(input: string, options?: SanitizeOptions): string {
+    const har: Har = JSON.parse(input);
+
+    // Apply default values if options are not provided
+    const effectiveOptions = {
+        scrubAllRequestHeaders: options?.scrubAllRequestHeaders || false,
+        scrubAllCookies: options?.scrubAllCookies || false,
+        scrubAllQueryParams: options?.scrubAllQueryParams || false,
+        scrubAllPostParams: options?.scrubAllPostParams || false,
+        scrubAllResponseHeaders: options?.scrubAllResponseHeaders || false,
+        scrubAllBodyContents: options?.scrubAllBodyContents || false,
+        scrubSpecificMimeTypes: options?.scrubSpecificMimeTypes || defaultMimeTypesList,
+        scrubSpecificHeader: options?.scrubSpecificHeader || defaultWordList,
+        scrubSpecificResponseHeader: options?.scrubSpecificResponseHeader|| defaultWordList,
+        scrubSpecificPostParam: options?.scrubSpecificPostParam || defaultWordList,
+        scrubSpecificCookie: options?.scrubSpecificCookie || defaultWordList,
+        scrubSpecificQueryParam: options?.scrubSpecificQueryParam || defaultWordList,
+    };
+
+    console.log('effective options ', effectiveOptions);
+
+    har.log.entries.forEach(entry => {
+        sanitizeRequest(entry.request, effectiveOptions);
+        sanitizeResponse(entry.response, effectiveOptions);
     });
 
     return JSON.stringify(har, null, 2);
