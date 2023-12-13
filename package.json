@@ -17,6 +17,7 @@
     "@forge/api": "^2.20.1",
     "@forge/events": "^0.8.22",
     "@forge/resolver": "^1.5.20",
-    "@forge/ui": "^1.10.0"
+    "@forge/ui": "^1.10.0",
+    "mime-types": "^2.1.35"
   }
 }

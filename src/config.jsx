@@ -1,6 +1,6 @@
 import Resolver from '@forge/resolver';
 import { storage } from '@forge/api';
-
+import { http } from '@forge/api';
 import { defaultMimeTypesList, defaultWordList } from './harSanitizer';
 
 const defaultSettings = {

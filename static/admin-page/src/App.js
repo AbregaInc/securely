@@ -11,6 +11,8 @@ import Tag from '@atlaskit/tag';
 import TextField from '@atlaskit/textfield';
 import Button from '@atlaskit/button';
 import Spinner from '@atlaskit/spinner';
+import TrashIcon from '@atlaskit/icon/glyph/trash'
+import AddCircleIcon from '@atlaskit/icon/glyph/add-circle'
 
 await view.theme.enable();
 
@@ -22,27 +24,73 @@ function CustomLabel({ htmlFor, children, style }) {
     );
 }
 
-function TagManager({
+const validateInput = (input, type) => {
+    switch (type) {
+      case 'header':
+      case 'postParam':
+        // Only allow A-Z, a-z, 0-9, hyphen (-), and underscore (_)
+        return /^[A-Za-z0-9-_]+$/.test(input);
+      case 'cookie':
+        // Allow printable ASCII except for control characters, spaces, tabs, and separators
+        return /^[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]+$/.test(input);
+      case 'queryArg':
+        // Only allow A-Z, a-z, 0-9, hyphen (-), and underscore (_)
+        return /^[A-Za-z0-9-_]+$/.test(input);
+      case 'mimeType':
+        // Basic validation for MIME types
+        return /^[A-Za-z0-9-/+]+$/.test(input);
+      default:
+        return false;
+    }
+  };
+  
+
+  function TagManager({
     tagData,
     onAddTag,
     onRemoveTag,
     subHeading,
-    subDescription
+    subDescription,
+    type 
 }) {
-    console.log("Rendering TagManager, tagData:", tagData);
     const [inputValue, setInputValue] = useState('');
+    const [isAdding, setIsAdding] = useState(false);
+    const [error, setError] = useState(''); // New state for error message
+
+    const handleAddTagClick = () => {
+        setIsAdding(true);
+        setError('');
+    };
 
     const handleAddTagInternal = () => {
-        if (inputValue.trim()) {
+        if (inputValue.trim() && validateInput(inputValue, type)) {
             onAddTag(inputValue);
             setInputValue('');
+            setIsAdding(false);
+        } else {
+            setError('Invalid input'); // Set an error message
+        }
+    };
+
+    const handleCancel = () => {
+        setInputValue('');
+        setIsAdding(false);
+        setError(''); // Clear error message on cancel
+    };
+
+    const handleInputChange = (e) => {
+        setInputValue(e.target.value);
+        if (!validateInput(e.target.value, type)) {
+            setError('Invalid input');
+        } else {
+            setError('');
         }
     };
 
     const tagInputStyle = {
         display: 'flex',
         alignItems: 'center',
-        marginTop: '10px',
+        marginTop: '20px',
         marginBottom: token('space.500', '40px')
     };
 
@@ -56,6 +104,15 @@ function TagManager({
         fontSize: '14px',
         color: 'grey',
         marginTop: '5px'
+    };
+
+    const buttonStyle = {
+        marginLeft: '10px', // Spacing between buttons and input field
+    };
+
+    const addTagButtonStyle = {
+        marginTop: '20px',
+        appearance: isAdding ? 'primary' : 'initial',
     };
 
     return (
@@ -72,20 +129,28 @@ function TagManager({
                     />
                 ))}
             </TagGroup>
-            <div style={tagInputStyle}>
-                <TextField
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Add a tag"
-                />
-                <Button
-                    style={{ marginLeft: '10px' }}
-                    onClick={handleAddTagInternal}
-                    isDisabled={!inputValue.trim()}
+            {isAdding ? (
+                <div>
+                    <div style={tagInputStyle}>
+                        <TextField
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder="Add a tag"
+                            autoFocus
+                        />
+                        <Button style={buttonStyle} onClick={handleAddTagInternal} isDisabled={!inputValue.trim()}>Add</Button>
+                        <Button style={buttonStyle} onClick={handleCancel}>X</Button>   
+                    </div>
+                    {error && <div style={{ color: 'red', marginTop: '5px' }}>{error}</div>} {/* Display error message */}
+                </div>
+            ) : (
+                <Button onClick={handleAddTagClick}
+                style={addTagButtonStyle}
+                iconAfter={<AddCircleIcon label="" size="small" />}
                 >
                     Add
                 </Button>
-            </div>
+            )}
         </div>
     );
 }
@@ -226,7 +291,10 @@ function App() {
                                 </p>                
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button onClick={handleResetToDefaults}>Reset All Settings to Default</Button>
+                                <Button onClick={handleResetToDefaults}
+                                iconAfter={<TrashIcon label="" size="small" />}
+                                >
+                                    Reset All Settings to Default</Button>
                             </div>
                             </Grid>
                             <ToggleWithLabel
@@ -239,6 +307,7 @@ function App() {
 
                             <TagManager
                                 tagData={settings.scrubSpecificHeader}
+                                type="header"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificHeader', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificHeader', tag)}
                                 subHeading={settings.scrubAllRequestHeaders ? "Exclude these request headers" : "Only remove these request headers"}
@@ -256,6 +325,7 @@ function App() {
                             />
                             <TagManager
                                 tagData={settings.scrubSpecificResponseHeader}
+                                type="header"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificResponseHeader', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificResponseHeader', tag)}
                                 subHeading={settings.scrubAllResponseHeaders ? "Exclude these response headers" : "Only remove these response headers"}
@@ -272,6 +342,7 @@ function App() {
                             />
                             <TagManager
                                 tagData={settings.scrubSpecificCookie}
+                                type="cookie"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificCookie', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificCookie', tag)}
                                 subHeading={settings.scrubAllCookies ? "Exclude these cookies" : "Only remove these cookies"}
@@ -288,6 +359,7 @@ function App() {
                             />
                             <TagManager
                                 tagData={settings.scrubSpecificQueryParam}
+                                type="queryArg"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificQueryParam', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificQueryParam', tag)}
                                 subHeading={settings.scrubAllQueryParams ? "Exclude these query arguments" : "Only remove these query arguments"}
@@ -304,6 +376,7 @@ function App() {
                                 />
                             <TagManager
                                 tagData={settings.scrubSpecificPostParam}
+                                type="postParam"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificPostParamm', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
                                 subHeading={settings.scrubSpecificPostParam ? "Exclude these query arguments" : "Only remove these query arguments"}
@@ -319,6 +392,7 @@ function App() {
                             />
                             <TagManager
                                 tagData={settings.scrubSpecificMimeTypes}
+                                type="mimeType"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificMimeTypes', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificMimeTypes', tag)}
                                 subHeading={settings.scrubAllBodyContents ? "Exclude responses with these MIME Types" : "Only remove responses with these MIME Types"}
