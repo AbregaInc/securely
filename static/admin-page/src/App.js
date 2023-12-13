@@ -27,7 +27,7 @@ function CustomLabel({ htmlFor, children, style }) {
 const MAX_VALUE_LENGTH = 1024; // 1 KB per value
 const MAX_TOTAL_LENGTH = 16384; // 16 KB total per setting
 
-const validateInput = (inputValue, existingValues) => {
+const validateInput = (inputValue, existingValues, type) => {
     if (inputValue.length > MAX_VALUE_LENGTH) {
         console.log("Value exceeds maximum length of 1 KB");
         return false;
@@ -43,16 +43,16 @@ const validateInput = (inputValue, existingValues) => {
       case 'header':
       case 'postParam':
         // Only allow A-Z, a-z, 0-9, hyphen (-), and underscore (_)
-        return /^[A-Za-z0-9-_]+$/.test(input);
+        return /^[A-Za-z0-9-_]+$/.test(inputValue);
       case 'cookie':
         // Allow printable ASCII except for control characters, spaces, tabs, and separators
-        return /^[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]+$/.test(input);
+        return /^[\u0021\u0023-\u002B\u002D-\u003A\u003C-\u005B\u005D-\u007E]+$/.test(inputValue);
       case 'queryArg':
         // Only allow A-Z, a-z, 0-9, hyphen (-), and underscore (_)
-        return /^[A-Za-z0-9-_]+$/.test(input);
+        return /^[A-Za-z0-9-_]+$/.test(inputValue);
       case 'mimeType':
         // Basic validation for MIME types
-        return /^[A-Za-z0-9-/+]+$/.test(input);
+        return /^[A-Za-z0-9-/+]+$/.test(inputValue);
       default:
         return false;
     }
@@ -77,7 +77,7 @@ const validateInput = (inputValue, existingValues) => {
     };
 
     const handleAddTagInternal = () => {
-        if (inputValue.trim() && validateInput(inputValue, type)) {
+        if (inputValue.trim() && validateInput(inputValue, tagData, type)) {
             onAddTag(inputValue);
             setInputValue('');
             setIsAdding(false);
@@ -85,20 +85,21 @@ const validateInput = (inputValue, existingValues) => {
             setError('Invalid input'); // Set an error message
         }
     };
+    
+    // Update the handleInputChange function
+    const handleInputChange = (e) => {
+        setInputValue(e.target.value);
+        if (!validateInput(e.target.value, tagData, type)) {
+            setError('Invalid input');
+        } else {
+            setError('');
+        }
+    };
 
     const handleCancel = () => {
         setInputValue('');
         setIsAdding(false);
         setError(''); // Clear error message on cancel
-    };
-
-    const handleInputChange = (e) => {
-        setInputValue(e.target.value);
-        if (!validateInput(e.target.value, type)) {
-            setError('Invalid input');
-        } else {
-            setError('');
-        }
     };
 
     const tagInputStyle = {
@@ -129,9 +130,26 @@ const validateInput = (inputValue, existingValues) => {
         appearance: isAdding ? 'primary' : 'initial',
     };
 
+    const headingRowStyle = {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between', // Aligns items to start and end of the container
+        marginBottom: '10px' // Adjust as needed
+    };
+
     return (
         <div>
-            {subHeading && <div style={subHeadingStyle}>{subHeading}</div>}
+            <div style={headingRowStyle}>
+                {subHeading && <div style={subHeadingStyle}>{subHeading}</div>}
+                {!isAdding && (
+                    <Button onClick={handleAddTagClick}
+                        style={addTagButtonStyle}
+                        iconAfter={<AddCircleIcon label="" size="small" />}
+                    >
+                        Add
+                    </Button>
+                )}
+            </div>
             {subDescription && <div style={subDescriptionStyle}>{subDescription}</div>}
             <TagGroup>
                 {tagData.map((tag) => (
@@ -143,12 +161,12 @@ const validateInput = (inputValue, existingValues) => {
                     />
                 ))}
             </TagGroup>
-            {isAdding ? (
+            {isAdding && (
                 <div>
                     <div style={tagInputStyle}>
                         <TextField
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={handleInputChange}
                             placeholder="Add a tag"
                             autoFocus
                         />
@@ -157,13 +175,6 @@ const validateInput = (inputValue, existingValues) => {
                     </div>
                     {error && <div style={{ color: 'red', marginTop: '5px' }}>{error}</div>} {/* Display error message */}
                 </div>
-            ) : (
-                <Button onClick={handleAddTagClick}
-                style={addTagButtonStyle}
-                iconAfter={<AddCircleIcon label="" size="small" />}
-                >
-                    Add
-                </Button>
             )}
         </div>
     );
@@ -297,19 +308,19 @@ function App() {
                 ) : (
                     <Grid templateColumns="1fr" gap="space.200">
                             <Grid templateColumns="repeat(2, 1fr)" gap="space.200">
-                            <div>
-                                <Heading level="h600">HAR File Scrubbing Configuration</Heading>
-                                <p style={{ marginBottom: token('space.500', '40px') }}>
-                                    By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
-                                    If you would like to scrub all of a given data element, then please enable that below.
-                                </p>                
-                            </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button onClick={handleResetToDefaults}
-                                iconAfter={<TrashIcon label="" size="small" />}
-                                >
-                                    Reset All Settings to Default</Button>
-                            </div>
+                                <div>
+                                    <Heading level="h600">HAR File Scrubbing Configuration</Heading>
+                                    <p style={{ marginBottom: token('space.500', '40px') }}>
+                                        By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
+                                        If you would like to scrub all of a given data element, then please enable that below.
+                                    </p>                
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <Button onClick={handleResetToDefaults}
+                                    iconAfter={<TrashIcon label="" size="small" />}
+                                    >
+                                        Reset All Settings to Default</Button>
+                                </div>
                             </Grid>
                             <ToggleWithLabel
                                 label="Remove all request headers"
@@ -393,7 +404,7 @@ function App() {
                                 type="postParam"
                                 onAddTag={(tag) => handleAddTag('scrubSpecificPostParamm', tag)}
                                 onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
-                                subHeading={settings.scrubSpecificPostParam ? "Exclude these query arguments" : "Only remove these query arguments"}
+                                subHeading={settings.scrubSpecificPostParam ? "Exclude these POST parameters" : "Only remove these POST parameters"}
                                 subDescription={settings.scrubAllPostParams ? "Removes all POST parameters except the ones listed below." : "Removes only the POST parameters listed below."}
                                 />
                             <hr />
