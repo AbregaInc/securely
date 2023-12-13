@@ -242,11 +242,15 @@ function App() {
     const [isLoading, setIsLoading] = useState(false); // New loading state
 
     const handleChange = async (key, event) => {
-        setIsLoading(true); // Start loading
+        //event.preventDefault(); // Prevent the default form submission behavior
+        //setIsLoading(true); // Start loading. If uncommented, will cause flicker. Likely due to overlay issues in spinner.
+    
         const newValue = event.target.checked;
         setSettings(prevSettings => ({ ...prevSettings, [key]: newValue }));
+    
         await invoke('setSettings', { key, value: newValue });
-        setIsLoading(false); // End loading
+    
+        //setIsLoading(false); // End loading
     };
 
     // Function to handle addition of a tag
