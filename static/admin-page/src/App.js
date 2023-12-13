@@ -10,6 +10,7 @@ import TagGroup from '@atlaskit/tag-group';
 import Tag from '@atlaskit/tag';
 import TextField from '@atlaskit/textfield';
 import Button from '@atlaskit/button';
+import Spinner from '@atlaskit/spinner';
 
 await view.theme.enable();
 
@@ -147,10 +148,15 @@ function App() {
         scrubSpecificMimeTypes: [],
     });
 
+
+    const [isLoading, setIsLoading] = useState(false); // New loading state
+
     const handleChange = async (key, event) => {
+        setIsLoading(true); // Start loading
         const newValue = event.target.checked;
         setSettings(prevSettings => ({ ...prevSettings, [key]: newValue }));
         await invoke('setSettings', { key, value: newValue });
+        setIsLoading(false); // End loading
     };
 
     // Function to handle addition of a tag
@@ -190,12 +196,13 @@ function App() {
         const updatedSettings = await invoke('getSettings');
         setSettings(updatedSettings);
     };
-    
 
     useEffect(() => {
         const fetchSettings = async () => {
+            setIsLoading(true); // Start loading on first load
             const loadedSettings = await invoke('getSettings');
             setSettings(loadedSettings);
+            setIsLoading(false); // Stop loading after settings are loaded
         };
     
         fetchSettings();
@@ -203,113 +210,123 @@ function App() {
 
     return (
         <Page>
-            <Grid templateColumns="1fr" gap="space.200">
-                <Grid templateColumns="repeat(2, 1fr)" gap="space.200">
-                    <div>
-                        <Heading level="h600">HAR File Scrubbing Configuration</Heading>
-                        <p style={{ marginBottom: token('space.500', '40px') }}>By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
-                            If you would like to scrub all of a given data element, then please enable that below.</p>                
+            <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {isLoading ? (
+                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                        <Spinner size="large" />
                     </div>
-                    <div>
-                        <Button onClick={handleResetToDefaults}>Reset All Settings to Default</Button>
-                    </div>
-                </Grid>
-                <ToggleWithLabel
-                    label="Remove all request headers"
-                    checked={settings.scrubAllRequestHeaders}
-                    onChange={(e) => handleChange('scrubAllRequestHeaders', e)}
-                    id="scrubAllRequestHeaders"
-                    description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
-                />
+                ) : (
+                    <Grid templateColumns="1fr" gap="space.200">
+                            <Grid templateColumns="repeat(2, 1fr)" gap="space.200">
+                            <div>
+                                <Heading level="h600">HAR File Scrubbing Configuration</Heading>
+                                <p style={{ marginBottom: token('space.500', '40px') }}>
+                                    By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
+                                    If you would like to scrub all of a given data element, then please enable that below.
+                                </p>                
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <Button onClick={handleResetToDefaults}>Reset All Settings to Default</Button>
+                            </div>
+                            </Grid>
+                            <ToggleWithLabel
+                                label="Remove all request headers"
+                                checked={settings.scrubAllRequestHeaders}
+                                onChange={(e) => handleChange('scrubAllRequestHeaders', e)}
+                                id="scrubAllRequestHeaders"
+                                description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
+                            />
 
-                <TagManager
-                    tagData={settings.scrubSpecificHeader}
-                    onAddTag={(tag) => handleAddTag('scrubSpecificHeader', tag)}
-                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificHeader', tag)}
-                    subHeading={settings.scrubAllRequestHeaders ? "Exclude these request headers" : "Only remove these request headers"}
-                    subDescription={settings.scrubAllRequestHeaders ? "Removes all request headers except the ones listed below." : "Removes only the request headers listed below."}
-                />
+                            <TagManager
+                                tagData={settings.scrubSpecificHeader}
+                                onAddTag={(tag) => handleAddTag('scrubSpecificHeader', tag)}
+                                onRemoveTag={(tag) => handleRemoveTag('scrubSpecificHeader', tag)}
+                                subHeading={settings.scrubAllRequestHeaders ? "Exclude these request headers" : "Only remove these request headers"}
+                                subDescription={settings.scrubAllRequestHeaders ? "Removes all request headers except the ones listed below." : "Removes only the request headers listed below."}
+                            />
 
-                <hr />
+                            <hr />
 
-                <ToggleWithLabel
-                    label="Remove all response headers"
-                    checked={settings.scrubAllResponseHeaders}
-                    onChange={(e) => handleChange('scrubAllResponseHeaders', e)}
-                    id="scrubAllResponseHeaders"
-                    description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
-                />
-                <TagManager
-                    tagData={settings.scrubSpecificResponseHeader}
-                    onAddTag={(tag) => handleAddTag('scrubSpecificResponseHeader', tag)}
-                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificResponseHeader', tag)}
-                    subHeading={settings.scrubAllResponseHeaders ? "Exclude these response headers" : "Only remove these response headers"}
-                    subDescription={settings.scrubAllResponseHeaders ? "Removes all request response except the ones listed below." : "Removes only the response headers listed below."}
-                />
+                            <ToggleWithLabel
+                                label="Remove all response headers"
+                                checked={settings.scrubAllResponseHeaders}
+                                onChange={(e) => handleChange('scrubAllResponseHeaders', e)}
+                                id="scrubAllResponseHeaders"
+                                description="HTTP headers contain metadata about the request or response, or about the object sent in the message body. Examples include Content-Type to describe the data format, Authorization for credentials, and User-Agent for client information."
+                            />
+                            <TagManager
+                                tagData={settings.scrubSpecificResponseHeader}
+                                onAddTag={(tag) => handleAddTag('scrubSpecificResponseHeader', tag)}
+                                onRemoveTag={(tag) => handleRemoveTag('scrubSpecificResponseHeader', tag)}
+                                subHeading={settings.scrubAllResponseHeaders ? "Exclude these response headers" : "Only remove these response headers"}
+                                subDescription={settings.scrubAllResponseHeaders ? "Removes all request response except the ones listed below." : "Removes only the response headers listed below."}
+                            />
 
-                <hr />
-                <ToggleWithLabel
-                    label="Remove all cookies"
-                    checked={settings.scrubAllCookies}
-                    onChange={(e) => handleChange('scrubAllCookies', e)}
-                    id="scrubAllCookies"
-                    description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
-                />
-                <TagManager
-                    tagData={settings.scrubSpecificCookie}
-                    onAddTag={(tag) => handleAddTag('scrubSpecificCookie', tag)}
-                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificCookie', tag)}
-                    subHeading={settings.scrubAllCookies ? "Exclude these cookies" : "Only remove these cookies"}
-                    subDescription={settings.scrubAllCookies ? "Removes all cookies except the ones listed below." : "Removes only the cookies listed below."}
-                />
-                <hr />
+                            <hr />
+                            <ToggleWithLabel
+                                label="Remove all cookies"
+                                checked={settings.scrubAllCookies}
+                                onChange={(e) => handleChange('scrubAllCookies', e)}
+                                id="scrubAllCookies"
+                                description="Cookies are small pieces of data stored on the client side, which are sent to the server with each HTTP request. They are used to remember stateful information for the user between page requests, such as login status or preferences."
+                            />
+                            <TagManager
+                                tagData={settings.scrubSpecificCookie}
+                                onAddTag={(tag) => handleAddTag('scrubSpecificCookie', tag)}
+                                onRemoveTag={(tag) => handleRemoveTag('scrubSpecificCookie', tag)}
+                                subHeading={settings.scrubAllCookies ? "Exclude these cookies" : "Only remove these cookies"}
+                                subDescription={settings.scrubAllCookies ? "Removes all cookies except the ones listed below." : "Removes only the cookies listed below."}
+                            />
+                            <hr />
 
-                <ToggleWithLabel
-                    label="Remove all query arguments"
-                    checked={settings.scrubAllQueryParams}
-                    onChange={(e) => handleChange('scrubAllQueryParams', e)}
-                    id="scrubAllQueryParams"
-                    description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
-                />
-                <TagManager
-                    tagData={settings.scrubSpecificQueryParam}
-                    onAddTag={(tag) => handleAddTag('scrubSpecificQueryParam', tag)}
-                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificQueryParam', tag)}
-                    subHeading={settings.scrubAllQueryParams ? "Exclude these query arguments" : "Only remove these query arguments"}
-                    subDescription={settings.scrubAllQueryParams ? "Removes all query arguments except the ones listed below." : "Removes only the query arguments listed below."}
-                />
-                <hr />
+                            <ToggleWithLabel
+                                label="Remove all query arguments"
+                                checked={settings.scrubAllQueryParams}
+                                onChange={(e) => handleChange('scrubAllQueryParams', e)}
+                                id="scrubAllQueryParams"
+                                description="Query arguments are part of the URL that provide additional parameters to the request. Starting with a ? symbol in the URL, they are formatted as key-value pairs separated by &, for example, ?search=query&sort=asc."
+                            />
+                            <TagManager
+                                tagData={settings.scrubSpecificQueryParam}
+                                onAddTag={(tag) => handleAddTag('scrubSpecificQueryParam', tag)}
+                                onRemoveTag={(tag) => handleRemoveTag('scrubSpecificQueryParam', tag)}
+                                subHeading={settings.scrubAllQueryParams ? "Exclude these query arguments" : "Only remove these query arguments"}
+                                subDescription={settings.scrubAllQueryParams ? "Removes all query arguments except the ones listed below." : "Removes only the query arguments listed below."}
+                            />
+                            <hr />
 
-                <ToggleWithLabel
-                    label="Remove all POST parameters"
-                    checked={settings.scrubAllPostParams}
-                    onChange={(e) => handleChange('scrubAllPostParams', e)}
-                    id="scrubAllPostParams"
-                    description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are not visible in the URL."
-                    />
-                <TagManager
-                    tagData={settings.scrubSpecificPostParam}
-                    onAddTag={(tag) => handleAddTag('scrubSpecificPostParamm', tag)}
-                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
-                    subHeading={settings.scrubSpecificPostParam ? "Exclude these query arguments" : "Only remove these query arguments"}
-                    subDescription={settings.scrubAllPostParams ? "Removes all POST parameters except the ones listed below." : "Removes only the POST parameters listed below."}
-                    />
-                <hr />
-                <ToggleWithLabel
-                    label="Remove the whole response body"
-                    checked={settings.scrubAllBodyContents}
-                    onChange={(e) => handleChange('scrubAllBodyContents', e)}
-                    id="scrubAllBodyContents"
-                    description="The response body often contains the bulk of the data returned by a request, including HTML, JSON, XML, or other formats. Removing it can prevent sensitive data exposure, particularly in responses that include user or application data."
-                />
-                <TagManager
-                    tagData={settings.scrubSpecificMimeTypes}
-                    onAddTag={(tag) => handleAddTag('scrubSpecificMimeTypes', tag)}
-                    onRemoveTag={(tag) => handleRemoveTag('scrubSpecificMimeTypes', tag)}
-                    subHeading={settings.scrubAllBodyContents ? "Exclude responses with these MIME Types" : "Only remove responses with these MIME Types"}
-                    subDescription={settings.scrubAllBodyContents ? "Removes all responses with MIME Types except the ones listed below." : "Removes only the responses with the MIME Types listed below."}
-                />
-            </Grid>
+                            <ToggleWithLabel
+                                label="Remove all POST parameters"
+                                checked={settings.scrubAllPostParams}
+                                onChange={(e) => handleChange('scrubAllPostParams', e)}
+                                id="scrubAllPostParams"
+                                description="POST parameters are included in the body of an HTTP POST request. They are used to send data to the server to be processed, such as form submissions or file uploads. Unlike query arguments, POST parameters are not visible in the URL."
+                                />
+                            <TagManager
+                                tagData={settings.scrubSpecificPostParam}
+                                onAddTag={(tag) => handleAddTag('scrubSpecificPostParamm', tag)}
+                                onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
+                                subHeading={settings.scrubSpecificPostParam ? "Exclude these query arguments" : "Only remove these query arguments"}
+                                subDescription={settings.scrubAllPostParams ? "Removes all POST parameters except the ones listed below." : "Removes only the POST parameters listed below."}
+                                />
+                            <hr />
+                            <ToggleWithLabel
+                                label="Remove the whole response body"
+                                checked={settings.scrubAllBodyContents}
+                                onChange={(e) => handleChange('scrubAllBodyContents', e)}
+                                id="scrubAllBodyContents"
+                                description="The response body often contains the bulk of the data returned by a request, including HTML, JSON, XML, or other formats. Removing it can prevent sensitive data exposure, particularly in responses that include user or application data."
+                            />
+                            <TagManager
+                                tagData={settings.scrubSpecificMimeTypes}
+                                onAddTag={(tag) => handleAddTag('scrubSpecificMimeTypes', tag)}
+                                onRemoveTag={(tag) => handleRemoveTag('scrubSpecificMimeTypes', tag)}
+                                subHeading={settings.scrubAllBodyContents ? "Exclude responses with these MIME Types" : "Only remove responses with these MIME Types"}
+                                subDescription={settings.scrubAllBodyContents ? "Removes all responses with MIME Types except the ones listed below." : "Removes only the responses with the MIME Types listed below."}
+                            />
+                        </Grid>
+                    )}
+            </div>
         </Page>
     );
 }
