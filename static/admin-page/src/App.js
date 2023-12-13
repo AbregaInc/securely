@@ -24,7 +24,21 @@ function CustomLabel({ htmlFor, children, style }) {
     );
 }
 
-const validateInput = (input, type) => {
+const MAX_VALUE_LENGTH = 1024; // 1 KB per value
+const MAX_TOTAL_LENGTH = 16384; // 16 KB total per setting
+
+const validateInput = (inputValue, existingValues) => {
+    if (inputValue.length > MAX_VALUE_LENGTH) {
+        console.log("Value exceeds maximum length of 1 KB");
+        return false;
+    }
+
+    const totalLength = existingValues.reduce((acc, value) => acc + value.length, inputValue.length);
+    if (totalLength > MAX_TOTAL_LENGTH) {
+        console.log("Total size of values exceeds limit of 16 KB");
+        return false;
+    }
+
     switch (type) {
       case 'header':
       case 'postParam':
