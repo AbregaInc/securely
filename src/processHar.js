@@ -22,6 +22,21 @@ function extractUUID(url) {
     return match ? match[0] : null;
 }
 
+function logMemory(){
+    const formatMemoryUsage = (data) => `${Math.round(data / 1024 / 1024 * 100) / 100} MB`;
+
+    const memoryData = process.memoryUsage();
+
+    const memoryUsage = {
+    rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
+    heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+    heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+    external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+    };
+
+    console.log(memoryUsage);
+}
+
 async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
     try {
         var n = fileName.lastIndexOf(".");
@@ -30,7 +45,8 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         const form = new FormData();
 
         // Convert sanitizedContent to a Buffer if it's a string or an object
-        const fileBuffer = Buffer.from(JSON.stringify(sanitizedContent));
+        let fileBuffer = Buffer.from(JSON.stringify(sanitizedContent));
+        sanitizedContent = false; //Freeing up memory
         form.append('file', fileBuffer, { filename: newFileName });
         console.log('uploading file to jira');
         const response = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/attachments`, {
@@ -42,7 +58,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
             },
             body: form
         });
-
+        fileBuffer = false; // Freeing up memory
         console.log(`Response: ${response.status} ${response.statusText}`);
 
         const responseJson = await response.json();
@@ -71,14 +87,16 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
 
 resolver.define("processHar", async ({ payload, context }) => {
     console.log('processHar.js consumer function invoked');
-    console.log(JSON.stringify(context));
+    //console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
-    console.log(issueIdOrKey, fileName, attachmentId)
+    ///console.log(issueIdOrKey, fileName, attachmentId)
 
     try {
 
-        const attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${attachmentId}`, {
+        logMemory();
+
+        let attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${attachmentId}`, {
             headers: {
                 'Accept': 'application/json'
             }
@@ -95,9 +113,10 @@ resolver.define("processHar", async ({ payload, context }) => {
 
         const originalAttachmentMediaId = extractUUID(attachmentResponse.url);
 
-        const harObject = await attachmentResponse.json();  // Parse the response once
+        let harObject = await attachmentResponse.json();  // Parse the response once
 
-
+        attachmentResponse = false; // freeing up memory
+        logMemory();
         // Fetch the settings from Forge storage
         const keys = [
             'scrubAllRequestHeaders', 'scrubSpecificHeader', 
@@ -107,32 +126,37 @@ resolver.define("processHar", async ({ payload, context }) => {
             'scrubAllResponseHeaders', 'scrubSpecificResponseHeader', 
             'scrubAllBodyContents', 'scrubSpecificMimeTypes'
         ];
-        const settings = {};
         
-        for (const key of keys) {
-            const storedValue = await storage.get(key);
-            settings[key] = storedValue ?? (key.includes('scrubAll') ? false : []); // Default to false for booleans, empty array for lists
-        }
+        const settings = {};
 
+        for (const key of keys) {
+            try {
+                const storedValue = await storage.get(key);
+                settings[key] = storedValue ?? (key.includes('scrubAll') ? false : []); // Default to false for booleans, empty array for lists
+            } catch (error) {
+                console.error('key of Keys Error:', error);
+            }
+        }
         // Construct the options object
         const options = {
-            har: harObject,  // The HAR data
+            //har: harObject,  // The HAR data
             // You can include other options like 'words' here if needed
             ...settings  // Spread the settings into the options object
         };
 
+        logMemory();
+
         //console.log('Scrub options: ', JSON.stringify(options));
-
-
 
         try {
             // TODO - this probably also needs some kind of trigger callback in case scrubbing takes longer
             // than the max function runtime.
 
             console.log('scrubbing the file');
-
-            const harData = typeof harObject === 'string' ? harObject : JSON.stringify(harObject);
-
+            logMemory();
+            let harData = typeof harObject === 'string' ? harObject : JSON.stringify(harObject);
+            harObject = false; // trying to free up memory
+            logMemory();
             let scrubbedHarString;
             try {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
@@ -150,7 +174,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                     scrubAllBodyContents: options.scrubAllBodyContents,
                     scrubSpecificMimeTypes: options.scrubSpecificMimeTypes
                 });
-
+                harData = false; // freeing up memory
                 console.log('Sanitization completed');
             } catch (e) {
                 console.error('Error during sanitization:', e);
@@ -159,9 +183,10 @@ resolver.define("processHar", async ({ payload, context }) => {
 
             // Parse the string back into a JSON object
             let scrubbedHar = JSON.parse(scrubbedHarString);
-
+            scrubbedHarString = false; //Freeing up memory.
             // Create a new attachment with the sanitized content
             const createAttachmentSuccessful = await createAttachment(issueIdOrKey, scrubbedHar, fileName);
+
             // Delete the original attachments only if the new attachment was created successfully
             if (createAttachmentSuccessful.status) {
 

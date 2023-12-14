@@ -13,10 +13,11 @@ export async function run(event, context) {
     console.log(JSON.stringify(event));
 
     if (event.eventType === 'avi:jira:created:attachment'){ 
-        if (event.attachment.size < 103809024){
+        if (event.attachment.size < 419430400){
             const fileName = event.attachment.fileName.toLowerCase();
             if (fileName.endsWith(".har") && !fileName.includes("-cleaned.har")) {
     
+                /*
                 const dedupeId = event.attachment.issueId + event.attachment.fileName + event.attachment.id;
                 console.log('Dedupe ID: ', hash(dedupeId));
     
@@ -26,7 +27,9 @@ export async function run(event, context) {
                     console.log(`Duplicate found for ${dedupeId}, skipping processing.`);
                     return; // Stop processing if duplicate is found
                 }
-    
+                */
+
+                
                 const payload = {
                     issueIdOrKey: event.attachment.issueId,
                     fileName: event.attachment.fileName,
