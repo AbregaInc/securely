@@ -60,7 +60,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         });
 
         console.log(`Update Response: ${updateResponse.status} ${updateResponse.statusText}`);
-        console.log(await updateResponse.json());
+        //console.log(await updateResponse.json());
 
     } catch (error) {
         console.error('Error updating comment:', error);
@@ -120,7 +120,7 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
 
         console.log(originalAttachmentMediaId);
         console.log('comments with attachments')
-        console.log(JSON.stringify(commentsWithAttachment));
+        //console.log(JSON.stringify(commentsWithAttachment));
 
         for (const comment of commentsWithAttachment) {
             try {
@@ -147,7 +147,7 @@ async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachm
 
         const issueData = await issueResponse.json();
         console.log('issue data');
-        console.log(JSON.stringify(issueData));
+        //console.log(JSON.stringify(issueData));
 
         const updatedIssueData = {};
 
