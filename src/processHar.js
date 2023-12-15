@@ -4,7 +4,7 @@ import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer'; 
 import { storage } from '@forge/api';
-import { sanitizeHar } from "./harSanitizer"; // Import your sanitize function
+import { sanitizeHar } from "./harSanitizer";
 const { createHash } = require('crypto');
 
 
@@ -29,9 +29,9 @@ function logMemory(){
 
     const memoryUsage = {
     rss: `${formatMemoryUsage(memoryData.rss)} -> Resident Set Size - total memory allocated for the process execution`,
-    heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
-    heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
-    external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
+    //heapTotal: `${formatMemoryUsage(memoryData.heapTotal)} -> total size of the allocated heap`,
+    //heapUsed: `${formatMemoryUsage(memoryData.heapUsed)} -> actual memory used during the execution`,
+    //external: `${formatMemoryUsage(memoryData.external)} -> V8 external memory`,
     };
 
     console.log(memoryUsage);
@@ -46,7 +46,6 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
 
         // Convert sanitizedContent to a Buffer if it's a string or an object
         let fileBuffer = Buffer.from(JSON.stringify(sanitizedContent));
-        sanitizedContent = false; //Freeing up memory
         form.append('file', fileBuffer, { filename: newFileName });
         console.log('uploading file to jira');
         const response = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/attachments`, {
@@ -58,7 +57,6 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
             },
             body: form
         });
-        fileBuffer = false; // Freeing up memory
         console.log(`Response: ${response.status} ${response.statusText}`);
 
         const responseJson = await response.json();
@@ -93,7 +91,7 @@ resolver.define("processHar", async ({ payload, context }) => {
     ///console.log(issueIdOrKey, fileName, attachmentId)
 
     try {
-
+        console.log(1);
         logMemory();
 
         let attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${attachmentId}`, {
@@ -114,8 +112,7 @@ resolver.define("processHar", async ({ payload, context }) => {
         const originalAttachmentMediaId = extractUUID(attachmentResponse.url);
 
         let harObject = await attachmentResponse.json();  // Parse the response once
-
-        attachmentResponse = false; // freeing up memory
+        console.log(2);
         logMemory();
         // Fetch the settings from Forge storage
         const keys = [
@@ -143,7 +140,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             // You can include other options like 'words' here if needed
             ...settings  // Spread the settings into the options object
         };
-
+        console.log(4);
         logMemory();
 
         //console.log('Scrub options: ', JSON.stringify(options));
@@ -153,10 +150,9 @@ resolver.define("processHar", async ({ payload, context }) => {
             // than the max function runtime.
 
             console.log('scrubbing the file');
+            console.log(5);
             logMemory();
             let harData = typeof harObject === 'string' ? harObject : JSON.stringify(harObject);
-            harObject = false; // trying to free up memory
-            logMemory();
             let scrubbedHarString;
             try {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
@@ -174,7 +170,8 @@ resolver.define("processHar", async ({ payload, context }) => {
                     scrubAllBodyContents: options.scrubAllBodyContents,
                     scrubSpecificMimeTypes: options.scrubSpecificMimeTypes
                 });
-                harData = false; // freeing up memory
+                console.log(7);
+                logMemory();
                 console.log('Sanitization completed');
             } catch (e) {
                 console.error('Error during sanitization:', e);
@@ -183,10 +180,12 @@ resolver.define("processHar", async ({ payload, context }) => {
 
             // Parse the string back into a JSON object
             let scrubbedHar = JSON.parse(scrubbedHarString);
-            scrubbedHarString = false; //Freeing up memory.
+            console.log(9);
+            logMemory();
             // Create a new attachment with the sanitized content
             const createAttachmentSuccessful = await createAttachment(issueIdOrKey, scrubbedHar, fileName);
-
+            console.log(11);
+            logMemory();
             // Delete the original attachments only if the new attachment was created successfully
             if (createAttachmentSuccessful.status) {
 
@@ -215,8 +214,8 @@ resolver.define("processHar", async ({ payload, context }) => {
                 // TODO P1 - this logic isn't right. We need to persist the dedupe long enough so that when Atlassian sends dupe events, we can reject them for a while. 
                 // Deleting the dedpue id here doesn't help. Instead we should probably be storing a timestamp, then searching for all keys with a timestamp 
                 // that is at least some amount of time in the past and then cleaning those up
-                const dedupeId = issueIdOrKey + fileName + attachmentId;
-                await storage.delete(hash(dedupeId));
+                //const dedupeId = issueIdOrKey + fileName + attachmentId;
+                //await storage.delete(hash(dedupeId));
                 return Promise.resolve({
                     statusCode: 200 
                 });
