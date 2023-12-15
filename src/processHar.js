@@ -6,6 +6,13 @@ import { Buffer } from 'buffer';
 import { storage } from '@forge/api';
 import { sanitizeHar } from "./harSanitizer";
 
+import { setFlagsFromString } from 'v8';
+import { runInNewContext } from 'vm';
+
+setFlagsFromString('--expose_gc');
+const gc = runInNewContext('gc'); // nocommit
+gc();
+
 const resolver = new Resolver();
 
 const queue = new Queue({ key: 'comment-queue' });
@@ -54,7 +61,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
             body: form
         });
     
-        console.log(`Response: ${response.status} ${response.statusText}`);
+        console.log(`Creating Attachment Response: ${response.status} ${response.statusText}`);
 
         const responseJson = await response.json();
         //console.log(JSON.stringify(responseJson[0].id));
@@ -65,7 +72,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
             }
         });
         
-        console.log(`New Attachment Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);   
+        console.log(`New Attachment Metadata Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);   
 
         const mediaURL = await attachmentResponse.url;
         const newMediaId = extractUUID(mediaURL);
@@ -81,39 +88,39 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
 }
 
 resolver.define("processHar", async ({ payload, context }) => {
-    console.log('processHar.js consumer function invoked');
+    //console.log('processHar.js consumer function invoked');
     //console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
     console.log(issueIdOrKey, fileName, attachmentId)
 
     try {
-        console.log(1);
-        logMemory();
-
-        let attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${attachmentId}`, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-
-        console.log(`Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);
-
-        if (!attachmentResponse.ok){
-            console.log("Attachment not found in Jira");
-            return Promise.resolve({
-                statusCode: 200 
+        let attachmentResponse;
+        try {
+            attachmentResponse = await api.asApp().requestJira(route`/rest/api/3/attachment/content/${attachmentId}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
             });
+    
+            console.log(`get attachment response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);
+    
+            if (!attachmentResponse.ok){
+                console.log("Attachment not found in Jira");
+                return Promise.resolve({
+                    statusCode: 200 
+                });
+            }
+
+        } catch (e) {
+            console.error('Error fetching attachment:', e);
         }
 
         const originalAttachmentMediaId = extractUUID(attachmentResponse.url);
 
         let harObject = await attachmentResponse.json();  // Parse the response once
-        console.log(2);
-        logMemory();
         attachmentResponse = null; // freeing up memory
-        console.log(3);
-        logMemory();
+
         // Fetch the settings from Forge storage
         const keys = [
             'scrubAllRequestHeaders', 'scrubSpecificHeader', 
@@ -136,20 +143,12 @@ resolver.define("processHar", async ({ payload, context }) => {
         }
         // Construct the options object
         const options = {
-            //har: harObject,  // The HAR data
-            // You can include other options like 'words' here if needed
             ...settings  // Spread the settings into the options object
         };
-        console.log(4);
-        logMemory();
-
+        
         //console.log('Scrub options: ', JSON.stringify(options));
 
         try {
-
-            console.log('scrubbing the file');
-            console.log(5);
-            logMemory();
 
             let scrubbedHar;
             try {
@@ -168,23 +167,24 @@ resolver.define("processHar", async ({ payload, context }) => {
                     scrubAllBodyContents: options.scrubAllBodyContents,
                     scrubSpecificMimeTypes: options.scrubSpecificMimeTypes
                 });
-                console.log(7);
-                logMemory();
-                console.log('Sanitization completed');
+                //console.log('Sanitization completed');
             } catch (e) {
                 console.error('Error during sanitization:', e);
                 // Handle the error appropriately
             }
 
-            // Parse the string back into a JSON object
-            console.log(9);
-            logMemory();
             // Create a new attachment with the sanitized content
-            const createAttachmentSuccessful = await createAttachment(issueIdOrKey, scrubbedHar, fileName);
+            let createAttachmentSuccessful;
+            try{
+                createAttachmentSuccessful = await createAttachment(issueIdOrKey, scrubbedHar, fileName);
+            } catch (e) {
+                console.error('Error when adding new attachment: ', e);
+                // Handle the error appropriately
+            }
+
             scrubbedHar = null;
-            console.log(11);
-            logMemory();
-            // Delete the original attachments only if the new attachment was created successfully
+
+            // Process the original attachments only if the new attachment was created successfully
             if (createAttachmentSuccessful.status) {
 
                 // We use this to look up previously processed attachments. Helps in scenarios where
@@ -201,7 +201,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                     newAttachmentMediaId: createAttachmentSuccessful.id,
                 };
 
-                console.log(payload);
+                //console.log(payload);
                 const jobId = await queue.push(payload);
             
                 return Promise.resolve({

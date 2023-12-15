@@ -28,8 +28,8 @@ modules:
       handler: processHar.handler
     - key: config
       handler: config.handler
-    - key: process-comment-func
-      handler: processComment.handler
+    - key: process-objects
+      handler: processExistingObjects.handler
   consumer:
     - key: har-processor
       queue: har-queue
@@ -39,8 +39,8 @@ modules:
     - key: comment-processor
       queue: comment-queue
       resolver:
-        function: process-comment-func
-        method: processComment
+        function: process-objects
+        method: processExistingObjects
 resources:
   - key: admin-main
     path: static/admin-page/build

@@ -19,7 +19,7 @@ async function updateMediaIdsInContentBlock(contentBlock) {
 }
 
 async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId, newAttachmentId) {
-    console.log('updateComment');
+    //console.log('updateComment');
 
 
     try {
@@ -27,37 +27,52 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         console.log('comment id', commentId);
 
         // Fetch the comment body
-        const commentResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
+        let commentResponse;
+        try {
+            commentResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+        } catch (e) {
+            console.error('Error getting comment body:', e);
+            // Handle the error appropriately
+        }
+
+
         const commentData = await commentResponse.json();
         const commentBody = commentData.body;
 
-        console.log("Original Comment Body:");
-        console.log(JSON.stringify(commentBody));
+        //console.log("Original Comment Body:");
+        //console.log(JSON.stringify(commentBody));
 
         // Replace the original attachment ID with the new one
         for (const contentBlock of commentBody.content) {
             await updateMediaIdsInContentBlock(contentBlock);
         }
         
-        console.log("Updated Comment Body:");
-        console.log(JSON.stringify(commentBody));
+        //console.log("Updated Comment Body:");
+        //console.log(JSON.stringify(commentBody));
 
         // Update the comment 
-        const updateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
-            method: 'PUT',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                body: commentBody
-            })
-        });
+        let updateResponse;
+        try {
+            updateResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment/${commentId}`, {
+                method: 'PUT',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    body: commentBody
+                })
+            });
+
+        } catch (e) {
+            console.error('Error during comment update:', e);
+            // Handle the error appropriately
+        }
 
         console.log(`Update Response: ${updateResponse.status} ${updateResponse.statusText}`);
         //console.log(await updateResponse.json());
@@ -71,11 +86,17 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
 async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttachmentId) {
     try {
         // Fetch comments for the issue
-        const issueCommentsResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment`, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
+        let issueCommentsResponse;
+        try {
+            issueCommentsResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/comment`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+        } catch (e) {
+            console.error('Error fetching issue comments:', e);
+        }
+
 
         const commentsData = await issueCommentsResponse.json();
 
@@ -85,19 +106,26 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
           
         var bodyData = JSON.stringify({ ids: ids }, null, 2);
           
-        console.log(bodyData);
+        //console.log(bodyData);
         
+        let commentBodyResponse;
+        try {
+            commentBodyResponse = await api.asApp().requestJira(route`/rest/api/3/comment/list`, {
+                method: 'POST',
+                headers: {
+                  'Accept': 'application/json',
+                  'Content-Type': 'application/json'
+                },
+                body: bodyData
+              });
+
+        } catch (e) {
+            console.error('Error getting comment list:', e);
+        }
         // TODO - This needs to support pagination. Possibly to be split out into an event queue.
         // Maybe not? I tested this with a ton of comments and it seems fine? However, this may fall
         // apart when we go to process lots of old content
-        const commentBodyResponse = await api.asApp().requestJira(route`/rest/api/3/comment/list`, {
-            method: 'POST',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            body: bodyData
-          });
+
 
         const commentBodyResponseJson = await commentBodyResponse.json();
 
@@ -139,11 +167,17 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
 async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachmentId) {
     try {
         // Fetch the issue
-        const issueResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}`, {
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
+        let issueResponse;
+        try {
+            issueResponse = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+        } catch (e) {
+            console.error('Error during sanitization:', e);
+        }
+
 
         const issueData = await issueResponse.json();
         console.log('issue data');
@@ -184,7 +218,7 @@ async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachm
         }
 
         console.log('updatedIssueData');
-        console.log(JSON.stringify(updatedIssueData));
+        //console.log(JSON.stringify(updatedIssueData));
 
         // Update the issue with the updated fields
         if (Object.keys(updatedIssueData).length) {
@@ -226,20 +260,20 @@ async function deleteAttachment(attachmentId) {
             method: 'DELETE'
         });
 
-        console.log(`Response: ${response.status} ${response.statusText}`);
-        console.log(await response.text());
+        console.log(`Deleting Attachmenet Response: ${response.status} ${response.statusText}`);
+        //console.log(await response.text());
     } catch (error) {
         console.error('Error deleting attachment:', error);
     }
 }
 
-resolver.define("processComment", async ({ payload, context }) => {
-    console.log('processComments.js');
+resolver.define("processExistingObjects", async ({ payload, context }) => {
+    //console.log('processExistingObjectss.js');
     console.log(JSON.stringify(context));
 
     const {attachmentId, issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId} = payload;
 
-    console.log(attachmentId, issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId)
+    //console.log(attachmentId, issueIdOrKey, originalAttachmentMediaId, newAttachmentMediaId)
 
     try {
                 await deleteAttachment(attachmentId);
@@ -249,7 +283,7 @@ resolver.define("processComment", async ({ payload, context }) => {
                     statusCode: 200 
                 });
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error processing stuff:', error);
     }
 });
 
