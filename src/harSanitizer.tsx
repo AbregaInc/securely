@@ -1,4 +1,4 @@
-import { Har, Request, Response } from "har-format";
+import { Har, Request, Response, Header } from "har-format";
 
 export type SanitizeOptions = {
     scrubAllRequestHeaders?: boolean;
@@ -200,32 +200,51 @@ function sanitizeRequest(request: Request, options: SanitizeOptions = {}) {
 
     // Handling post parameters
     if (request.postData) {
-        //console.log('Handling postData parameters');
-    
-        if (options.scrubAllPostParams) {
-            //console.log('Scrubbing all post parameters');
-            if (options.scrubSpecificPostParam && request.postData.params) {
+        // Scrubbing postData.params if they exist
+        if (request.postData.params) {
+            if (options.scrubAllPostParams) {
+                if (options.scrubSpecificPostParam) {
+                    request.postData.params = request.postData.params.filter(param => {
+                        return options.scrubSpecificPostParam?.some(specificPostParam => 
+                            specificPostParam.toLowerCase() === param.name.toLowerCase());
+                    });
+                } else {
+                    request.postData.params = [];
+                }
+            } else if (options.scrubSpecificPostParam) {
                 request.postData.params = request.postData.params.filter(param => {
-                    const shouldKeep = options.scrubSpecificPostParam?.some(specificPostParam => 
+                    return !options.scrubSpecificPostParam?.some(specificPostParam => 
                         specificPostParam.toLowerCase() === param.name.toLowerCase());
-                    //console.log(`Checking post parameter ${param.name}: Keep? ${shouldKeep}`);
-                    return shouldKeep;
                 });
-            } else {
-                request.postData.params = [];
             }
-            //console.log('Final postData params after scrubbing all: ', request.postData.params);
-        } else if (options.scrubSpecificPostParam && request.postData.params) {
-            //console.log('Scrubbing specific post parameters:', options.scrubSpecificPostParam);
-            request.postData.params = request.postData.params.filter(param => {
-                const shouldRemove = options.scrubSpecificPostParam?.some(specificPostParam => 
-                    specificPostParam.toLowerCase() === param.name.toLowerCase());
-                //console.log(`Checking post parameter ${param.name}: Remove? ${shouldRemove}`);
-                return !shouldRemove;
-            });
-            //console.log('Final postData params after scrubbing specific: ', request.postData.params);
         }
+
+        // Handling form data with MIME type application/x-www-form-urlencoded
+        if (request.postData.mimeType === 'application/x-www-form-urlencoded') {
+            let formDataParams = new URLSearchParams(request.postData.text);
+            let keysToDelete: string[] = [];
+        
+            formDataParams.forEach((value, key) => {
+                if (options.scrubAllPostParams) {
+                    if (options.scrubSpecificPostParam && options.scrubSpecificPostParam.includes(key.toLowerCase())) {
+                        // Keep param if it's in the specific list
+                    } else {
+                        // Delete param if it's not in the specific list
+                        keysToDelete.push(key);
+                    }
+                } else if (options.scrubSpecificPostParam && options.scrubSpecificPostParam.includes(key.toLowerCase())) {
+                    // Delete param if it's in the specific list
+                    keysToDelete.push(key);
+                }
+            });
+        
+            keysToDelete.forEach(key => formDataParams.delete(key));
+            
+            request.postData.text = formDataParams.toString();
+        }
+    
     }
+
     
 
     // Handling MIME types
@@ -267,6 +286,30 @@ function sanitizeResponse(response: Response, options: SanitizeOptions = {}) {
             return !shouldRemove;
         });
         //console.log('Final response headers after scrubbing specific: ', response.headers);
+    }
+
+    // Handling Set-Cookie headers in response
+    if (options.scrubAllCookies) {
+        // Scrub all Set-Cookie headers
+        //console.log('removing all set-cookie headers');
+        response.headers = response.headers.filter(header => header.name.toLowerCase() !== 'set-cookie');
+    } else if (options.scrubSpecificCookie) {
+        // Scrub specific Set-Cookie headers
+        response.headers = response.headers.map(header => {
+            if (header.name.toLowerCase() === 'set-cookie') {
+                const cookieName = header.value.split('=')[0]; // Extract the cookie name
+                //console.log(cookieName);
+                const shouldRemove = options.scrubSpecificCookie?.some(
+                    specificCookie => {
+                        //console.log('cookie', specificCookie);
+                        return specificCookie.toLowerCase() === cookieName.toLowerCase();
+                    }
+                );
+                //console.log('shouldRemove ', shouldRemove);
+                return shouldRemove ? null : header; // Mark header for removal if it matches the specific cookies list
+            }
+            return header;
+        }).filter(header => header !== null) as Header[]; // Remove marked headers (null) from the headers array
     }
     
 
