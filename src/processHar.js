@@ -42,6 +42,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         let fileBuffer = Buffer.from(JSON.stringify(sanitizedContent));
         sanitizedContent = null; //Freeing up memory
         form.append('file', fileBuffer, { filename: newFileName });
+        fileBuffer = null; // Freeing up memory
         console.log('uploading file to jira');
         const response = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/attachments`, {
             method: 'POST',
@@ -52,7 +53,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
             },
             body: form
         });
-        fileBuffer = null; // Freeing up memory
+    
         console.log(`Response: ${response.status} ${response.statusText}`);
 
         const responseJson = await response.json();
@@ -84,7 +85,7 @@ resolver.define("processHar", async ({ payload, context }) => {
     //console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
-    ///console.log(issueIdOrKey, fileName, attachmentId)
+    console.log(issueIdOrKey, fileName, attachmentId)
 
     try {
         console.log(1);
@@ -95,7 +96,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                 'Accept': 'application/json'
             }
         });
-        
+
         console.log(`Response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);
 
         if (!attachmentResponse.ok){
@@ -180,6 +181,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             logMemory();
             // Create a new attachment with the sanitized content
             const createAttachmentSuccessful = await createAttachment(issueIdOrKey, scrubbedHar, fileName);
+            scrubbedHar = null;
             console.log(11);
             logMemory();
             // Delete the original attachments only if the new attachment was created successfully
@@ -201,15 +203,16 @@ resolver.define("processHar", async ({ payload, context }) => {
 
                 console.log(payload);
                 const jobId = await queue.push(payload);
-                
+            
                 return Promise.resolve({
                     statusCode: 200 
                 });
 
-                }
+            }
         } catch (error) {
             console.error('Error:', error);
         }
+
     } catch (error) {
         console.error('Getting Attachment Error:', error);
     }
