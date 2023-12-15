@@ -5,16 +5,10 @@ import FormData from "form-data";
 import { Buffer } from 'buffer'; 
 import { storage } from '@forge/api';
 import { sanitizeHar } from "./harSanitizer";
-const { createHash } = require('crypto');
-
 
 const resolver = new Resolver();
 
 const queue = new Queue({ key: 'comment-queue' });
-
-function hash(string) {
-    return createHash('sha256').update(string).digest('hex');
-  }
 
 function extractUUID(url) {
     const regex = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/;
@@ -46,6 +40,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
 
         // Convert sanitizedContent to a Buffer if it's a string or an object
         let fileBuffer = Buffer.from(JSON.stringify(sanitizedContent));
+        sanitizedContent = null; //Freeing up memory
         form.append('file', fileBuffer, { filename: newFileName });
         console.log('uploading file to jira');
         const response = await api.asApp().requestJira(route`/rest/api/3/issue/${issueIdOrKey}/attachments`, {
@@ -57,6 +52,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
             },
             body: form
         });
+        fileBuffer = null; // Freeing up memory
         console.log(`Response: ${response.status} ${response.statusText}`);
 
         const responseJson = await response.json();
@@ -114,6 +110,9 @@ resolver.define("processHar", async ({ payload, context }) => {
         let harObject = await attachmentResponse.json();  // Parse the response once
         console.log(2);
         logMemory();
+        attachmentResponse = null; // freeing up memory
+        console.log(3);
+        logMemory();
         // Fetch the settings from Forge storage
         const keys = [
             'scrubAllRequestHeaders', 'scrubSpecificHeader', 
@@ -146,17 +145,15 @@ resolver.define("processHar", async ({ payload, context }) => {
         //console.log('Scrub options: ', JSON.stringify(options));
 
         try {
-            // TODO - this probably also needs some kind of trigger callback in case scrubbing takes longer
-            // than the max function runtime.
 
             console.log('scrubbing the file');
             console.log(5);
             logMemory();
-            let harData = typeof harObject === 'string' ? harObject : JSON.stringify(harObject);
-            let scrubbedHarString;
+
+            let scrubbedHar;
             try {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
-                scrubbedHarString = sanitizeHar(harData, {
+                scrubbedHar = sanitizeHar(harObject, {
                     scrubAllCookies: options.scrubAllCookies,
                     scrubSpecificCookie: options.scrubSpecificCookie,
                     scrubAllRequestHeaders: options.scrubAllRequestHeaders,
@@ -179,7 +176,6 @@ resolver.define("processHar", async ({ payload, context }) => {
             }
 
             // Parse the string back into a JSON object
-            let scrubbedHar = JSON.parse(scrubbedHarString);
             console.log(9);
             logMemory();
             // Create a new attachment with the sanitized content
@@ -205,17 +201,7 @@ resolver.define("processHar", async ({ payload, context }) => {
 
                 console.log(payload);
                 const jobId = await queue.push(payload);
-
-                // TODO - looks like when an attachment comes in on an issue created event, we handle it correctly via the standard process
-                // however, we need to update the description (and maybe other fields that can include media?) similar to what we're doing
-                // with comments. The problem is that the attachment happens in it's own event, so we would need to ensure we go through and 
-                // look for description and other fields to update only once the attachment replacing is completed. 
                 
-                // TODO P1 - this logic isn't right. We need to persist the dedupe long enough so that when Atlassian sends dupe events, we can reject them for a while. 
-                // Deleting the dedpue id here doesn't help. Instead we should probably be storing a timestamp, then searching for all keys with a timestamp 
-                // that is at least some amount of time in the past and then cleaning those up
-                //const dedupeId = issueIdOrKey + fileName + attachmentId;
-                //await storage.delete(hash(dedupeId));
                 return Promise.resolve({
                     statusCode: 200 
                 });
