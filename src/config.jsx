@@ -68,7 +68,7 @@ resolver.define('setSettings', async (req) => {
     const { key, value } = req.payload;
 
     if (!validateSetting(key, value)) {
-        throw new Error(`Invalid value for setting '${key}'`);
+        console.warn(`Invalid value for setting '${key}'`);
     }
 
     await storage.set(key, value);

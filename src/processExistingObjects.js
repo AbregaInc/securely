@@ -36,7 +36,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
                 }
             });
         } catch (e) {
-            console.error('Error getting comment body:', e);
+            console.warn('Error getting comment body:', e);
             // Handle the error appropriately
         }
 
@@ -70,7 +70,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
             });
 
         } catch (e) {
-            console.error('Error during comment update:', e);
+            console.warn('Error during comment update:', e);
             // Handle the error appropriately
         }
 
@@ -78,7 +78,7 @@ async function updateComment(issueIdOrKey, commentId, originalAttachmentMediaId,
         //console.log(await updateResponse.json());
 
     } catch (error) {
-        console.error('Error updating comment:', error);
+        console.warn('Error updating comment:', error);
     }
 }
 
@@ -94,7 +94,7 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
                 }
             });
         } catch (e) {
-            console.error('Error fetching issue comments:', e);
+            console.warn('Error fetching issue comments:', e);
         }
 
 
@@ -120,7 +120,7 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
               });
 
         } catch (e) {
-            console.error('Error getting comment list:', e);
+            console.warn('Error getting comment list:', e);
         }
         // TODO - This needs to support pagination. Possibly to be split out into an event queue.
         // Maybe not? I tested this with a ton of comments and it seems fine? However, this may fall
@@ -155,12 +155,12 @@ async function processComments(issueIdOrKey, originalAttachmentMediaId, newAttac
                 await updateComment(issueIdOrKey, comment.id, originalAttachmentMediaId, newAttachmentId);
     
             } catch (commentError) {
-                console.error('Error updating comment:', commentError);
+                console.warn('Error updating comment:', commentError);
             }
         }
 
     } catch (error) {
-        console.error('Error processing comments:', error);
+        console.warn('Error processing comments:', error);
     }
 }
 
@@ -175,7 +175,7 @@ async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachm
                 }
             });
         } catch (e) {
-            console.error('Error during sanitization:', e);
+            console.warn('Error during sanitization:', e);
         }
 
 
@@ -243,13 +243,13 @@ async function processFields(issueIdOrKey, originalAttachmentMediaId, newAttachm
                     console.log('Response received, but it was not successful:', issueUpdateResponse.status);
                 }
             } catch (error) {
-                console.error('Error occurred while updating the issue:', error);
+                console.warn('Error occurred while updating the issue:', error);
             }
         } else {
             console.log('No fields contain the specified attachment');
         }
     } catch (error) {
-        console.error('Error processing comments:', error);
+        console.warn('Error processing comments:', error);
     }
 }
 
@@ -263,7 +263,7 @@ async function deleteAttachment(attachmentId) {
         console.log(`Deleting Attachmenet Response: ${response.status} ${response.statusText}`);
         //console.log(await response.text());
     } catch (error) {
-        console.error('Error deleting attachment:', error);
+        console.warn('Error deleting attachment:', error);
     }
 }
 
@@ -283,7 +283,7 @@ resolver.define("processExistingObjects", async ({ payload, context }) => {
                     statusCode: 200 
                 });
     } catch (error) {
-        console.error('Error processing stuff:', error);
+        console.warn('Error processing stuff:', error);
     }
 });
 

@@ -52,11 +52,11 @@ resolver.define('scrub', async ({ payload }) => {
     } catch (e) {
         // Properly handle the error of unknown type
         if (e instanceof Error) {
-            console.error(e);
+            console.warn(e);
             return jsonError(`Failed to scrub HAR file: ${e.message}`, 500);
         } else {
             // Handle non-Error objects
-            console.error('An unexpected error occurred:', e);
+            console.warn('An unexpected error occurred:', e);
             return jsonError('An unexpected error occurred', 500);
         }
     }

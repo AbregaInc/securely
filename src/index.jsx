@@ -33,10 +33,10 @@ export async function run(event, context) {
                 });
     
             } else {
-                console.error("Attachment was not a HAR file");
+                console.warn("Attachment was not a HAR file");
             }
         } else {
-            console.error("Attachment was > 75MB in size: ", event.attachment.fileName);
+            console.warn("Attachment was > 75MB in size: ", event.attachment.fileName);
         }
     }
 }

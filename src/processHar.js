@@ -83,7 +83,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         };
         
     } catch (error) {
-        console.error('Error creating attachment:', error);
+        console.warn('Error creating attachment:', error);
     }
 }
 
@@ -113,7 +113,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             }
 
         } catch (e) {
-            console.error('Error fetching attachment:', e);
+            console.warn('Error fetching attachment:', e);
         }
 
         const originalAttachmentMediaId = extractUUID(attachmentResponse.url);
@@ -138,7 +138,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                 const storedValue = await storage.get(key);
                 settings[key] = storedValue ?? (key.includes('scrubAll') ? false : []); // Default to false for booleans, empty array for lists
             } catch (error) {
-                console.error('key of Keys Error:', error);
+                console.warn('key of Keys Error:', error);
             }
         }
         // Construct the options object
@@ -169,7 +169,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                 });
                 //console.log('Sanitization completed');
             } catch (e) {
-                console.error('Error during sanitization:', e);
+                console.warn('Error during sanitization:', e);
                 // Handle the error appropriately
             }
 
@@ -178,7 +178,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             try{
                 createAttachmentSuccessful = await createAttachment(issueIdOrKey, scrubbedHar, fileName);
             } catch (e) {
-                console.error('Error when adding new attachment: ', e);
+                console.warn('Error when adding new attachment: ', e);
                 // Handle the error appropriately
             }
 
@@ -210,11 +210,11 @@ resolver.define("processHar", async ({ payload, context }) => {
 
             }
         } catch (error) {
-            console.error('Error:', error);
+            console.warn('Error:', error);
         }
 
     } catch (error) {
-        console.error('Getting Attachment Error:', error);
+        console.warn('Getting Attachment Error:', error);
     }
 
 });
