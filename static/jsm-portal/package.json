@@ -1,0 +1,46 @@
+{
+  "name": "jira-admin-page-custom-ui-static",
+  "version": "0.1.23",
+  "private": true,
+  "homepage": ".",
+  "dependencies": {
+    "@atlaskit/button": "^16.18.1",
+    "@atlaskit/css-reset": "^6.6.1",
+    "@atlaskit/field-base": "^15.2.4",
+    "@atlaskit/form": "^8.11.13",
+    "@atlaskit/heading": "^1.4.3",
+    "@atlaskit/icon": "^22.0.0",
+    "@atlaskit/page": "^12.3.6",
+    "@atlaskit/tag": "^12.0.1",
+    "@atlaskit/tag-group": "^10.2.5",
+    "@atlaskit/textfield": "^6.0.0",
+    "@atlaskit/theme": "^12.6.2",
+    "@atlaskit/toggle": "^12.6.11",
+    "@atlaskit/tokens": "^1.28.1",
+    "@forge/bridge": "^3.0.0",
+    "material-ui-dropzone": "^3.5.0",
+    "react": "^16.14.0",
+    "react-dom": "^16.13.1"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "react-scripts": "^5.0.1"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

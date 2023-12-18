@@ -13,6 +13,16 @@ modules:
       title: Securely Config
       useAsConfig: true
       useAsGetStarted: true
+  jiraServiceManagement:portalRequestCreatePropertyPanel:
+    - key: securely-scrubber-panel
+      resource: jsm-portal-scrubber
+      viewportSize: medium
+      resolver:
+        function: config
+      unlicensedAccess:
+        - anonymous
+        - customer
+        - anonymous
   trigger:
     - key: entrypoint
       function: main
@@ -44,6 +54,8 @@ modules:
 resources:
   - key: admin-main
     path: static/admin-page/build
+  - key: jsm-portal-scrubber
+    path: static/jsm-portal/build
 app:
   runtime:
     name: nodejs18.x
