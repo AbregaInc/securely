@@ -2,7 +2,7 @@ import Resolver from '@forge/resolver';
 import { storage } from '@forge/api';
 import http from 'http';
 import mime from 'mime-types';
-import { defaultMimeTypesList, defaultWordList } from './harSanitizer';
+import { defaultMimeTypesList, defaultWordList } from 'har-cleaner';
 
 const defaultSettings = {
     'scrubAllRequestHeaders': false,

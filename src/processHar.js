@@ -4,7 +4,7 @@ import api, { route } from "@forge/api";
 import FormData from "form-data";
 import { Buffer } from 'buffer'; 
 import { storage } from '@forge/api';
-import { sanitizeHar } from "./harSanitizer";
+import { sanitizeHar } from "har-cleaner";
 
 import { setFlagsFromString } from 'v8';
 import { runInNewContext } from 'vm';
