@@ -6,6 +6,7 @@
   "dependencies": {
     "@atlaskit/button": "^16.18.1",
     "@atlaskit/css-reset": "^6.6.1",
+    "@atlaskit/dropdown-menu": "^12.1.10",
     "@atlaskit/field-base": "^15.2.4",
     "@atlaskit/form": "^8.11.13",
     "@atlaskit/heading": "^1.4.3",
@@ -18,6 +19,7 @@
     "@atlaskit/toggle": "^12.6.11",
     "@atlaskit/tokens": "^1.28.1",
     "@forge/bridge": "^3.0.0",
+    "jszip": "^3.10.1",
     "material-ui-dropzone": "^3.5.0",
     "react": "^16.14.0",
     "react-dom": "^16.13.1",
