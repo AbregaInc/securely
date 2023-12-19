@@ -20,7 +20,8 @@
     "@forge/bridge": "^3.0.0",
     "material-ui-dropzone": "^3.5.0",
     "react": "^16.14.0",
-    "react-dom": "^16.13.1"
+    "react-dom": "^16.13.1",
+    "react-dropzone": "^14.2.3"
   },
   "devDependencies": {
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
