@@ -83,7 +83,7 @@ function HarFileScrubber() {
         <Page>
             <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center' }}>
                 {scrubbedFiles.length === 0 && (
-                    <div {...getRootProps()} style={{ border: '2px dashed #ccc', padding: '20px', textAlign: 'center' }}>
+                    <div {...getRootProps()} style={{ border: '2px dashed #ccc', padding: '10px', textAlign: 'center' }}>
                     <input {...getInputProps()} />
                     {isDragActive ? 
                         <p>Drop the HAR files here...</p> : 

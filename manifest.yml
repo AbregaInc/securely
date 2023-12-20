@@ -16,7 +16,7 @@ modules:
   jiraServiceManagement:portalRequestCreatePropertyPanel:
     - key: securely-scrubber-panel
       resource: jsm-portal-scrubber
-      viewportSize: medium
+      viewportSize: small
       resolver:
         function: config
       unlicensedAccess:
