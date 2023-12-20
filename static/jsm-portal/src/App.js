@@ -24,6 +24,11 @@ function HarFileScrubber() {
         fetchSettings();
     }, []);
 
+    useEffect(() => {
+        // Debugging to check the content of scrubbedFiles
+        console.log('Scrubbed Files:', scrubbedFiles);
+    }, [scrubbedFiles]);
+
     const onDrop = async (acceptedFiles) => {
         setUploadedFiles(acceptedFiles);
         setIsProcessing(true);
@@ -63,6 +68,17 @@ function HarFileScrubber() {
         setProcessingCompleted(false);
     };
 
+
+    const downloadSingleFile = (file) => {
+        const url = window.URL.createObjectURL(file.blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', file.name);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+    
     const downloadAllFiles = async () => {
         const zip = new JSZip();
         scrubbedFiles.forEach(file => {
@@ -91,40 +107,29 @@ function HarFileScrubber() {
                     }
                 </div>
                 )}
-                {isProcessing && <Spinner size="large" />}
-                {processingCompleted && <p>Cleaning completed, yes it's that fast.</p>}
+                {isProcessing && <Spinner size="medium" />}
+                {processingCompleted && <p>Cleaning completed. Yes, it's that fast.</p>}
                 {scrubbedFiles.length > 0 && (
                     <div style={{ marginTop: '20px' }}>
-                        <Button appearance="primary" onClick={downloadAllFiles} style={{ marginRight: '8px' }}>
-                            Download All
-                        </Button>
-                        <DropdownMenu
-                            triggerButtonProps={{
-                                iconAfter: <ChevronDownIcon label="More options" />,
-                                appearance: 'primary',
-                                isSelected: false
-                            }}
-                            triggerType="button"
-                        >
-                            <DropdownItemGroup title="Individual Files">
-                                {scrubbedFiles.map((file, index) => (
-                                    <DropdownItem key={index} onClick={() => {
-                                        const url = window.URL.createObjectURL(file.blob);
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.setAttribute('download', file.name);
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                    }}>
-                                        {file.name}
-                                    </DropdownItem>
-                                ))}
-                            </DropdownItemGroup>
-                        </DropdownMenu>
-                        <Button onClick={resetScrubber} appearance="subtle" style={{ marginLeft: '10px' }}>
-                            Reset
-                        </Button>
+                    {scrubbedFiles.length === 1 && (
+                                <Button 
+                                    appearance="primary" 
+                                    onClick={() => downloadSingleFile(scrubbedFiles[0])}
+                                >
+                                    Download cleaned file
+                                </Button>
+                            )}
+                            {scrubbedFiles.length > 1 && (
+                                <Button 
+                                    appearance="primary" 
+                                    onClick={downloadAllFiles}
+                                >
+                                    Download cleaned files
+                                </Button>
+                            )}
+                            <Button onClick={resetScrubber} appearance="subtle" style={{ marginLeft: '10px' }}>
+                                Reset
+                            </Button>
                     </div>
                 )}
             </div>
