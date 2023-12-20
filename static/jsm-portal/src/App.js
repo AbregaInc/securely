@@ -3,9 +3,7 @@ import { invoke } from '@forge/bridge';
 import { useDropzone } from 'react-dropzone';
 import JSZip from 'jszip';
 import { sanitizeHar } from 'har-cleaner';
-import DropdownMenu, { DropdownItem, DropdownItemGroup } from '@atlaskit/dropdown-menu';
-import ChevronDownIcon from '@atlaskit/icon/glyph/chevron-down';
-import Button, { IconButton, SplitButton } from '@atlaskit/button/new';
+import Button from '@atlaskit/button/new';
 import Spinner from '@atlaskit/spinner';
 import Page from '@atlaskit/page';
 
@@ -23,11 +21,6 @@ function HarFileScrubber() {
         };
         fetchSettings();
     }, []);
-
-    useEffect(() => {
-        // Debugging to check the content of scrubbedFiles
-        console.log('Scrubbed Files:', scrubbedFiles);
-    }, [scrubbedFiles]);
 
     const onDrop = async (acceptedFiles) => {
         setUploadedFiles(acceptedFiles);
@@ -56,8 +49,9 @@ function HarFileScrubber() {
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({ 
         onDrop, 
-        accept: '.har', 
-        maxSize: 75 * 1024 * 1024,
+        accept: {
+            'application/*': ['.har'],
+          },
         multiple: true
     });
 
@@ -78,7 +72,7 @@ function HarFileScrubber() {
         link.click();
         document.body.removeChild(link);
     };
-    
+
     const downloadAllFiles = async () => {
         const zip = new JSZip();
         scrubbedFiles.forEach(file => {
@@ -102,13 +96,13 @@ function HarFileScrubber() {
                     <div {...getRootProps()} style={{ border: '2px dashed #ccc', padding: '10px', textAlign: 'center' }}>
                     <input {...getInputProps()} />
                     {isDragActive ? 
-                        <p>Drop the HAR files here...</p> : 
-                        <p>If you need to attach HAR files, drag 'n' drop the files here first. They will have sensitive data removed without leaving your browser. Then upload the resulting files to the attachment field above.</p>
+                        <p style={{ margin: 'var(--ds-space-150,12px) 0 var(--ds-space-150,12px) 0'}}>Drop the HAR files here...</p> : 
+                        <p style={{ margin: 'var(--ds-space-150,12px) 0 var(--ds-space-150,12px) 0'}}>If you need to attach HAR files, drag and drop the files here first.<br/>Sensitive data will be removed without leaving your browser.<br/>Then download the cleaned files, and upload them to the attachment field above.</p>
                     }
                 </div>
                 )}
                 {isProcessing && <Spinner size="medium" />}
-                {processingCompleted && <p>Cleaning completed. Yes, it's that fast.</p>}
+                {processingCompleted && <p style={{ margin: 'var(--ds-space-150,12px) 0 var(--ds-space-150,12px) 0'}}>Cleaning completed. Yes, it's that fast.<br/>Please download the cleaned HAR files and attach them above.</p>}
                 {scrubbedFiles.length > 0 && (
                     <div style={{ marginTop: '20px' }}>
                     {scrubbedFiles.length === 1 && (
