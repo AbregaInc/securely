@@ -27,7 +27,6 @@ function CustomLabel({ htmlFor, children, style }) {
 
 // Finding attachments and analyzing them
 
-
 //helper function to get total issues we're analyzing
 const fetchTotalIssueCount = async () => {
     const jqlQuery = {
@@ -370,7 +369,13 @@ function App() {
     });
 
 
-    const [isLoading, setIsLoading] = useState(false); // New loading state
+    // State to hold the counts
+    const [harCountResult, setHarCountResult] = useState(0);
+    const [cleanedHarCountResult, setCleanedHarCountResult] = useState(0);
+    const [isHarDataLoading, setIsHarDataLoading] = useState(true); 
+    
+
+    const [isLoading, setIsLoading] = useState(false); // Used for general settings
 
     const handleChange = async (key, event) => {
         //event.preventDefault(); // Prevent the default form submission behavior
@@ -431,6 +436,23 @@ function App() {
         };
 
         fetchSettings();
+
+        // Async function to load HAR file data
+        const loadHarData = async () => {
+            setIsHarDataLoading(true); // Set loading state for HAR data
+
+            // Perform your analysis and evaluation here
+            const totalIssueCount = await fetchTotalIssueCount();
+            const harCount = await evaluateExpression(expressionHar, totalIssueCount);
+            const cleanedHarCount = await evaluateExpression(expressionCleanedHar, totalIssueCount);
+
+            // Update state with the HAR file counts
+            setHarCountResult(harCount);
+            setCleanedHarCountResult(cleanedHarCount);
+            setIsHarDataLoading(false); // HAR data loading is complete
+        };
+
+        loadHarData();
     }, []);
 
     return (
@@ -447,14 +469,25 @@ function App() {
                                 <Heading level="h600">HAR File Scrubbing Configuration</Heading>
                                 <p style={{ marginBottom: token('space.500', '40px') }}>
                                     By default, Securely will scrub portions of a HAR file. You can read about this in <a href="https://abrega.gitbook.io/securely/secure-har-file-management-with-securely/what-is-sanitized">our documentation</a>.
-                                    If you would like to scrub all of a given data element, then please enable that below.
+                                    If you would like to scrub all of a given data element, then please enable that below:
                                 </p>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                <Button onClick={handleResetToDefaults}
-                                    iconAfter={<TrashIcon label="" size="small" />}
-                                >
-                                    Reset All Settings to Default</Button>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <div style={{ alignSelf: 'stretch', textAlign: 'right' }}>
+                                    <Button onClick={handleResetToDefaults} iconAfter={<TrashIcon label="" size="small" />}>
+                                        Reset All Settings to Default
+                                    </Button>
+                                </div>
+                                <div style={{ alignSelf: 'stretch', textAlign: 'right', marginTop: 'var(--ds-space-150, 12px)' }}>
+                                    {isHarDataLoading ? (
+                                        <div>Loading HAR Cleaning data...</div>
+                                    ) : (
+                                        <div>
+                                            <p>Uncleaned HAR files: {harCountResult}</p>
+                                            <p>Cleaned HAR files: {cleanedHarCountResult}</p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </Grid>
                         <ToggleWithLabel
@@ -471,7 +504,7 @@ function App() {
                             onAddTag={(tag) => handleAddTag('scrubSpecificHeader', tag)}
                             onRemoveTag={(tag) => handleRemoveTag('scrubSpecificHeader', tag)}
                             subHeading={settings.scrubAllRequestHeaders ? "Exclude these request headers" : "Only remove these request headers"}
-                            subDescription={settings.scrubAllRequestHeaders ? "Removes all request headers except the ones listed below." : "Removes only the request headers listed below."}
+                            subDescription={settings.scrubAllRequestHeaders ? "Removes all request headers except the ones listed below:" : "Removes only the request headers listed below:"}
                         />
 
                         <hr />
@@ -489,7 +522,7 @@ function App() {
                             onAddTag={(tag) => handleAddTag('scrubSpecificResponseHeader', tag)}
                             onRemoveTag={(tag) => handleRemoveTag('scrubSpecificResponseHeader', tag)}
                             subHeading={settings.scrubAllResponseHeaders ? "Exclude these response headers" : "Only remove these response headers"}
-                            subDescription={settings.scrubAllResponseHeaders ? "Removes all request response except the ones listed below." : "Removes only the response headers listed below."}
+                            subDescription={settings.scrubAllResponseHeaders ? "Removes all request response except the ones listed below:" : "Removes only the response headers listed below:"}
                         />
 
                         <hr />
@@ -506,7 +539,7 @@ function App() {
                             onAddTag={(tag) => handleAddTag('scrubSpecificCookie', tag)}
                             onRemoveTag={(tag) => handleRemoveTag('scrubSpecificCookie', tag)}
                             subHeading={settings.scrubAllCookies ? "Exclude these cookies" : "Only remove these cookies"}
-                            subDescription={settings.scrubAllCookies ? "Removes all cookies except the ones listed below." : "Removes only the cookies listed below."}
+                            subDescription={settings.scrubAllCookies ? "Removes all cookies except the ones listed below:" : "Removes only the cookies listed below:"}
                         />
                         <hr />
 
@@ -523,7 +556,7 @@ function App() {
                             onAddTag={(tag) => handleAddTag('scrubSpecificQueryParam', tag)}
                             onRemoveTag={(tag) => handleRemoveTag('scrubSpecificQueryParam', tag)}
                             subHeading={settings.scrubAllQueryParams ? "Exclude these query arguments" : "Only remove these query arguments"}
-                            subDescription={settings.scrubAllQueryParams ? "Removes all query arguments except the ones listed below." : "Removes only the query arguments listed below."}
+                            subDescription={settings.scrubAllQueryParams ? "Removes all query arguments except the ones listed below:" : "Removes only the query arguments listed below:"}
                         />
                         <hr />
 
@@ -540,7 +573,7 @@ function App() {
                             onAddTag={(tag) => handleAddTag('scrubSpecificPostParamm', tag)}
                             onRemoveTag={(tag) => handleRemoveTag('scrubSpecificPostParam', tag)}
                             subHeading={settings.scrubSpecificPostParam ? "Exclude these POST parameters" : "Only remove these POST parameters"}
-                            subDescription={settings.scrubAllPostParams ? "Removes all POST parameters except the ones listed below." : "Removes only the POST parameters listed below."}
+                            subDescription={settings.scrubAllPostParams ? "Removes all POST parameters except the ones listed below:" : "Removes only the POST parameters listed below:"}
                         />
                         <hr />
                         <ToggleWithLabel
@@ -556,7 +589,7 @@ function App() {
                             onAddTag={(tag) => handleAddTag('scrubSpecificMimeTypes', tag)}
                             onRemoveTag={(tag) => handleRemoveTag('scrubSpecificMimeTypes', tag)}
                             subHeading={settings.scrubAllBodyContents ? "Exclude responses with these MIME Types" : "Only remove responses with these MIME Types"}
-                            subDescription={settings.scrubAllBodyContents ? "Removes all responses with MIME Types except the ones listed below." : "Removes only the responses with the MIME Types listed below."}
+                            subDescription={settings.scrubAllBodyContents ? "Removes all responses with MIME Types except the ones listed below:" : "Removes only the responses with the MIME Types listed below:"}
                         />
                     </Grid>
                 )}
