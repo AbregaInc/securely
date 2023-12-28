@@ -14,6 +14,8 @@ import Spinner from '@atlaskit/spinner';
 import TrashIcon from '@atlaskit/icon/glyph/trash'
 import AddCircleIcon from '@atlaskit/icon/glyph/add-circle'
 import { requestJira } from '@forge/bridge';
+import BannerWarning from './BannerWarning';
+
 
 await view.theme.enable();
 
@@ -367,6 +369,8 @@ function App() {
         scrubSpecificResponseHeader: [],
         scrubSpecificMimeTypes: [],
     });
+    
+    const [showBanner, setShowBanner] = useState(true); // State to control banner visibility
 
 
     // State to hold the counts
@@ -458,6 +462,7 @@ function App() {
     return (
         <Page>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {showBanner && <BannerWarning />}
                 {isLoading ? (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
                         <Spinner size="large" />
