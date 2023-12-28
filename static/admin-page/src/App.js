@@ -370,7 +370,7 @@ function App() {
         scrubSpecificMimeTypes: [],
     });
     
-    const [showBanner, setShowBanner] = useState(true); // State to control banner visibility
+    const [showBanner, setShowBanner] = useState(false); // State to control banner visibility
 
 
     // State to hold the counts
