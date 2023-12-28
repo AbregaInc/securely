@@ -13,6 +13,8 @@ import Button from '@atlaskit/button';
 import Spinner from '@atlaskit/spinner';
 import TrashIcon from '@atlaskit/icon/glyph/trash'
 import AddCircleIcon from '@atlaskit/icon/glyph/add-circle'
+import BannerWarning from './BannerWarning';
+
 
 await view.theme.enable();
 
@@ -238,6 +240,8 @@ function App() {
         scrubSpecificMimeTypes: [],
     });
 
+    const [showBanner, setShowBanner] = useState(true); // State to control banner visibility
+
 
     const [isLoading, setIsLoading] = useState(false); // New loading state
 
@@ -305,6 +309,7 @@ function App() {
     return (
         <Page>
             <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            {showBanner && <BannerWarning />}
             {isLoading ? (
                     <div style={{ textAlign: 'center', padding: '20px' }}>
                         <Spinner size="large" />

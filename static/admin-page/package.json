@@ -4,6 +4,7 @@
   "private": true,
   "homepage": ".",
   "dependencies": {
+    "@atlaskit/banner": "^12.1.18",
     "@atlaskit/button": "^16.18.0",
     "@atlaskit/css-reset": "^6.6.1",
     "@atlaskit/field-base": "^15.2.4",
