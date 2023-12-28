@@ -2,19 +2,25 @@ import Resolver from '@forge/resolver';
 import { storage } from '@forge/api';
 import http from 'http';
 import mime from 'mime-types';
-import { defaultMimeTypesList, defaultWordList } from 'har-cleaner';
+import { 
+    defaultRequestHeadersList, 
+    defaultCookiesList, 
+    defaultQueryPostParamsList, 
+    defaultResponseHeadersList, 
+    defaultMimeTypesList 
+} from 'har-cleaner';
 
 const defaultSettings = {
     'scrubAllRequestHeaders': false,
-    'scrubSpecificHeader': defaultWordList,
+    'scrubSpecificHeader': defaultRequestHeadersList,
     'scrubAllCookies': false,
-    'scrubSpecificCookie': defaultWordList,
+    'scrubSpecificCookie': defaultCookiesList,
     'scrubAllQueryParams': false,
-    'scrubSpecificQueryParam': defaultWordList,
+    'scrubSpecificQueryParam': defaultQueryPostParamsList,
     'scrubAllPostParams': false,
-    'scrubSpecificPostParam': defaultWordList,
+    'scrubSpecificPostParam': defaultQueryPostParamsList,
     'scrubAllResponseHeaders': false,
-    'scrubSpecificResponseHeader': defaultWordList,
+    'scrubSpecificResponseHeader': defaultResponseHeadersList,
     'scrubAllBodyContents': false,
     'scrubSpecificMimeTypes': defaultMimeTypesList
 };

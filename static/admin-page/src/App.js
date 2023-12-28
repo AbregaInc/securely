@@ -483,7 +483,7 @@ function App() {
                                         <div>Loading HAR Cleaning data...</div>
                                     ) : (
                                         <div>
-                                            <p>Uncleaned HAR files: {harCountResult}</p>
+                                            <p>HAR files at risk: {harCountResult}</p>
                                             <p>Cleaned HAR files: {cleanedHarCountResult}</p>
                                         </div>
                                     )}
