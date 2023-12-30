@@ -16,7 +16,7 @@ jobs:
           node-version: 18
       - run: npm ci
       - run: npm install @forge/cli@latest --no-optional
-      - run: npm run static:install
+      - run: npm run install
       - name: Build admin page
         run: |
           cd static/admin-page
