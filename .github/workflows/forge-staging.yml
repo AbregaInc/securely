@@ -10,12 +10,12 @@ jobs:
     name: Build the source code for deployment
     steps:
       - uses: actions/checkout@main
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v4
         with:
           node-version: 18
       - run: npm ci
-      - run: npm install @forge/cli@latest --no-optional
+      - run: npm install -g @forge/cli@latest --no-optional
       - name: Build admin page
         run: |
           cd static/admin-page
@@ -31,10 +31,9 @@ jobs:
           pwd
           ls -a 
       - name: disable analytics
-        run: npx forge settings set usage-analytics false
+        run: forge settings set usage-analytics false
       - name: Deploy to atlassian cloud site
         run: |
-          npm run static:build
           npx forge deploy --environment ${FORGE_ENVIRONMENT}
         env:
           FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
