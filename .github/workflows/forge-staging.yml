@@ -1,0 +1,43 @@
+name: Deploy to forge app to atlassian cloud site staging environment on push
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build the source code for deployment
+    steps:
+      - uses: actions/checkout@main
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm install @forge/cli@latest --no-optional
+      - run: npm run static:install
+      - name: Build admin page
+        run: |
+          cd static/admin-page
+          npm install
+          npm run build
+          pwd
+          ls -a 
+      - name: Build jsm portal page
+        run: |
+          cd static/jsm-portal
+          npm install
+          npm run build
+          pwd
+          ls -a 
+      - name: disable analytics
+        run: npx forge settings set usage-analytics false
+      - name: Deploy to atlassian cloud site
+        run: |
+          npm run static:build
+          npx forge deploy --environment ${FORGE_ENVIRONMENT}
+        env:
+          FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+          FORGE_TOKEN: ${{ secrets.FORGE_TOKEN }}
+          FORGE_ENVIRONMENT: staging
