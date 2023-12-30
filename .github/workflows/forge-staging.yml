@@ -39,3 +39,9 @@ jobs:
           FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
           FORGE_TOKEN: ${{ secrets.FORGE_TOKEN }}
           FORGE_ENVIRONMENT: staging
+      - name: Archive npm failure logs
+        uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: npm-logs
+          path: ~/.npm/_logs
