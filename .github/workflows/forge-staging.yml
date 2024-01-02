@@ -14,6 +14,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            static/admin-page/package-lock.json
+            static/jsm-portal/package-lock.json
       - run: npm ci
       - run: npm install -g @forge/cli@latest --no-optional
       - name: Build admin page
