@@ -45,7 +45,7 @@ jobs:
           fi
         env:
           FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
-          FORGE_TOKEN: ${{ secrets.FORGE_TOKEN }}
+          FORGE_API_TOKEN: ${{ secrets.FORGE_TOKEN }}
       - name: Archive npm failure logs
         uses: actions/upload-artifact@v2
         if: failure()
