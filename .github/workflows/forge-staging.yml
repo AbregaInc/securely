@@ -2,7 +2,7 @@ name: Deploy to forge app to atlassian cloud site staging environment on push
 
 on:
   push:
-    branches: [main]
+    branches: [main, production]
 
 jobs:
   build:
@@ -34,11 +34,18 @@ jobs:
         run: forge settings set usage-analytics false
       - name: Deploy to atlassian cloud site
         run: |
-          npx forge deploy --environment ${FORGE_ENVIRONMENT}
+          branch=${{ github.ref }}
+          if [ $branch == "refs/heads/main" ]
+          then
+            forge deploy -e staging
+            forge install --upgrade --non-interactive --site abrega.atlassian.net -e staging -p jira
+          elif [ $branch == "refs/heads/production" ]
+          then
+            forge deploy -e production
+          fi
         env:
           FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
           FORGE_TOKEN: ${{ secrets.FORGE_TOKEN }}
-          FORGE_ENVIRONMENT: staging
       - name: Archive npm failure logs
         uses: actions/upload-artifact@v2
         if: failure()
