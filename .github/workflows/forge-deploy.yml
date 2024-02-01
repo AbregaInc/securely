@@ -35,8 +35,6 @@ jobs:
           npm run build
           pwd
           ls -a 
-      - name: disable analytics
-        run: forge settings set usage-analytics false
       - name: Deploy to atlassian cloud site
         run: |
           branch=${{ github.ref }}
