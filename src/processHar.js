@@ -62,6 +62,7 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
         });
     
         console.log(`Creating Attachment Response: ${response.status} ${response.statusText}`);
+        logMemory();
 
         const responseJson = await response.json();
         //console.log(JSON.stringify(responseJson[0].id));
@@ -88,7 +89,8 @@ async function createAttachment(issueIdOrKey, sanitizedContent, fileName) {
 }
 
 resolver.define("processHar", async ({ payload, context }) => {
-    //console.log('processHar.js consumer function invoked');
+    console.log('processHar.js consumer function invoked');
+    logMemory();
     //console.log(JSON.stringify(context));
 
     const {issueIdOrKey, fileName, attachmentId} = payload;
@@ -104,7 +106,7 @@ resolver.define("processHar", async ({ payload, context }) => {
             });
     
             console.log(`get attachment response: ${attachmentResponse.status} ${attachmentResponse.statusText} ${attachmentResponse.url}`);
-    
+            logMemory();
             if (!attachmentResponse.ok){
                 console.log("Attachment not found in Jira");
                 return Promise.resolve({
@@ -151,6 +153,7 @@ resolver.define("processHar", async ({ payload, context }) => {
         try {
 
             let scrubbedHar;
+            logMemory();
             try {
                 // TODO: THE IMPORTANT THING IS THAT WE NEED TO FIGURE OUT SOME KIND OF HANDLING HERE FOR TIMEOUTS I GUESS?
                 scrubbedHar = sanitizeHar(harObject, {
@@ -172,7 +175,7 @@ resolver.define("processHar", async ({ payload, context }) => {
                 console.warn('Error during sanitization:', e);
                 // Handle the error appropriately
             }
-
+            logMemory();
             // Create a new attachment with the sanitized content
             let createAttachmentSuccessful;
             try{

@@ -14,15 +14,25 @@ modules:
       useAsConfig: true
       useAsGetStarted: true
   jiraServiceManagement:portalRequestCreatePropertyPanel:
-    - key: securely-scrubber-panel
+    - key: securely-scrubber-panel-portal
       resource: jsm-portal-scrubber
       viewportSize: small
       resolver:
         function: config
       unlicensedAccess:
-        - anonymous
+        - unlicensed
         - customer
         - anonymous
+  jiraServiceManagement:portalRequestDetail:
+    - key: securely-scrubber-panel-request
+      title: Securely - HAR Cleaner
+      resource: jsm-portal-scrubber
+      viewportSize: small
+      resolver:
+        function: config
+      unlicensedAccess:
+        - unlicensed
+        - customer
   trigger:
     - key: entrypoint
       function: main
