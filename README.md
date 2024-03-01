@@ -34,4 +34,4 @@ forge tunnel
 
 ## Support
 
-See [Get help](https://developer.atlassian.com/platform/forge/get-help/) for how to get help and provide feedback.
+If you are using the app, file a support ticket via https://abrega.atlassian.net/servicedesk/customer/portal/1. If you have an issue with the code please create a GitHub Issue.
